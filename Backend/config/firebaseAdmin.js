@@ -8,6 +8,8 @@ const path = require("path");
 // ✅ Vérification pour éviter une double initialisation
 if (!admin.apps.length) {
   try {
+    console.log("🌍 process.env.FIREBASE_SERVICE_ACCOUNT (extrait) :", process.env.FIREBASE_SERVICE_ACCOUNT?.substring(0, 100));
+
     const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
       ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
       : require(path.join(__dirname, "firebase-service-key.json"));
@@ -18,9 +20,11 @@ if (!admin.apps.length) {
     });
 
   } catch (error) {
+    console.error("❌ Erreur d'initialisation Firebase :", error);
     process.exit(1);
   }
 }
+
 
 // ✅ Initialisation des services
 const db = admin.firestore();
