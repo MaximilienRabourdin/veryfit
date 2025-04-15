@@ -8,9 +8,7 @@ admin.initializeApp({
 const testConnection = async () => {
   try {
     const user = await admin.auth().getUser("s0Vng97l6eMR6GHi9gcLSZBYYPm1");
-    console.log("Utilisateur récupéré :", user.email);
   } catch (error) {
-    console.error("Erreur de connexion à Firebase :", error);
   }
 };
 
@@ -20,9 +18,7 @@ testConnection();
 const setCustomClaims = async (uid, role, isApproved) => {
   try {
     await admin.auth().setCustomUserClaims(uid, { role, isApproved });
-    console.log(`Revendications définies pour ${uid} :`, { role, isApproved });
   } catch (error) {
-    console.error("Erreur lors de la mise à jour des revendications :", error);
   }
 };
 

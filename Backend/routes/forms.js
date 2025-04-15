@@ -24,7 +24,7 @@ router.get("/getForms/:role", async (req, res) => {
       forms,
     });
   } catch (error) {
-    console.error("Erreur lors de la récupération des formulaires :", error);
+    
     res.status(500).json({
       success: false,
       message: "Erreur interne lors de la récupération des formulaires.",
@@ -45,7 +45,7 @@ router.get("/:productName", async (req, res) => {
 
     res.status(200).json({ success: true, form: formDoc.data() });
   } catch (error) {
-    console.error("Erreur lors de la récupération du formulaire :", error);
+    
     res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 });
@@ -62,7 +62,7 @@ router.post("/submit", async (req, res) => {
     });
     res.status(200).json({ success: true, message: "Formulaire soumis avec succès." });
   } catch (error) {
-    console.error("Erreur lors de la soumission du formulaire :", error);
+    
     res.status(500).json({ success: false, message: "Erreur interne du serveur." });
   }
 });

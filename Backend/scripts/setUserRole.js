@@ -14,7 +14,7 @@ const setUserRole = async (req, res) => {
 
     res.status(200).json({ success: true, message: "Rôle attribué avec succès." });
   } catch (error) {
-    console.error("Erreur lors de l'attribution du rôle :", error);
+    
     res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 };

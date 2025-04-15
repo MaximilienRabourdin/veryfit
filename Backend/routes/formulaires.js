@@ -32,7 +32,7 @@ router.post("/remplir", async (req, res) => {
   
       res.json({ success: true, isComplete });
     } catch (error) {
-      console.error("Erreur remplissage formulaire:", error);
+      
       res.status(500).json({ error: "Erreur serveur", details: error.message });
     }
   });

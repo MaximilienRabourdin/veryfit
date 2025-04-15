@@ -47,11 +47,11 @@ const seedFormTemplates = async () => {
     for (const [role, templates] of Object.entries(formTemplates)) {
       const docRef = db.collection("formTemplates").doc(role);
       await docRef.set({ forms: templates }, { merge: true });
-      console.log(`Formulaires ajoutés pour ${role}`);
+      
     }
-    console.log("Tous les formulaires ont été injectés dans Firestore !");
+    
   } catch (error) {
-    console.error("Erreur lors de l'injection des formulaires :", error);
+    
   }
 };
 

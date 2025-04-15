@@ -33,7 +33,7 @@ const sendDeclarationNotification = async (req, res) => {
 
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error("Erreur envoi mail déclaration CE :", error);
+    
     return res.status(500).json({ error: "Erreur envoi mail." });
   }
 };

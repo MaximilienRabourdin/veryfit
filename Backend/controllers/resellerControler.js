@@ -38,7 +38,7 @@ const getRevendeurEmail = async (revendeurId) => {
 
     return userData.email; // Retourne l'email du revendeur
   } catch (error) {
-    console.error("Erreur lors de la récupération de l'email du revendeur :", error.message);
+    
     throw error;
   }
 };

@@ -23,7 +23,7 @@ const createUserWithRole = async ({ email, password, displayName, role }) => {
       isApproved: true,
     });
 
-    console.log(`✅ Utilisateur créé avec UID : ${uid} et rôle : ${role}`);
+    
 
     // 3. Enregistrer l'utilisateur dans Firestore (optionnel)
     await db.collection("users_webapp").doc(uid).set({
@@ -43,7 +43,7 @@ const createUserWithRole = async ({ email, password, displayName, role }) => {
       role,
     };
   } catch (error) {
-    console.error("❌ Erreur création utilisateur avec rôle :", error);
+    
     throw error;
   }
 };

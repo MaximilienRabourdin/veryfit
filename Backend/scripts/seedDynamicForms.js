@@ -413,11 +413,11 @@ const seedFirestore = async () => {
     for (const [formName, formData] of Object.entries(formsData)) {
       const ref = db.collection("dynamicForms").doc(formName);
       await ref.set(formData);
-      console.log(`✅ Données ajoutées pour ${formName}`);
+      
     }
-    console.log("✅ Toutes les données ont été injectées avec succès !");
+    
   } catch (error) {
-    console.error("❌ Erreur lors de l'injection :", error);
+    
   }
 };
 

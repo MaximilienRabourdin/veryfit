@@ -34,7 +34,7 @@ const generateDeclarationCEPDF = async ({ orderName, revendeur, produits, delive
     const pdfBytes = await pdfDoc.save();
     return Buffer.from(pdfBytes);
   } catch (error) {
-    console.error("❌ Erreur génération PDF :", error);
+    
     throw error;
   }
 };

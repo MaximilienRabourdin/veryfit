@@ -7,7 +7,7 @@ const addLogEntry = async (action, performedBy, details) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
     } catch (error) {
-      console.error("Erreur lors de l'ajout au journal :", error);
+      
     }
   };
   

@@ -13,9 +13,9 @@ if (!admin.apps.length) {
 async function setCustomClaims(uid) {
   try {
     await admin.auth().setCustomUserClaims(uid, { role: "Super Admin" });
-    console.log(`✅ Rôle 'Super Admin' ajouté à l'utilisateur ${uid}`);
+    
   } catch (error) {
-    console.error("❌ Erreur lors de l'ajout des claims :", error);
+    
   }
 }
 

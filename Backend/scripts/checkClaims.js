@@ -8,9 +8,9 @@ admin.initializeApp({
 async function checkClaims(email) {
   try {
     const user = await admin.auth().getUserByEmail(email);
-    console.log(`Revendications pour ${email} :`, user.customClaims);
+    
   } catch (error) {
-    console.error("Erreur lors de la vérification des revendications :", error);
+    
   }
 }
 

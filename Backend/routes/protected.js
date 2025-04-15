@@ -34,7 +34,7 @@ router.get("/user-info", verifyToken, (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Erreur lors de la récupération des informations utilisateur :", error);
+    
     res.status(500).json({ success: false, message: "Erreur interne du serveur." });
   }
 });

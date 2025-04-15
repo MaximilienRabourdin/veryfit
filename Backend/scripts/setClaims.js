@@ -14,8 +14,8 @@ admin
   .auth()
   .setCustomUserClaims(uid, { role, isApproved })
   .then(() => {
-    console.log(`✅ Rôle "${role}" défini avec succès pour l'utilisateur ${uid}`);
+    
   })
   .catch((error) => {
-    console.error("❌ Erreur définition des claims :", error);
+    
   });

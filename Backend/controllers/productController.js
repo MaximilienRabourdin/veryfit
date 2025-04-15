@@ -11,7 +11,7 @@ const getAllProducts = async (req, res) => {
     const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(products);
   } catch (err) {
-    console.error("❌ Erreur lors de la récupération des produits :", err);
+    
     res.status(500).json({ msg: "Erreur serveur", error: err.message });
   }
 };
@@ -26,7 +26,7 @@ const getProductById = async (req, res) => {
     }
     res.json({ id: productDoc.id, ...productDoc.data() });
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération du produit :", error);
+    
     res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };

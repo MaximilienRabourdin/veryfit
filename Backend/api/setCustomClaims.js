@@ -6,7 +6,7 @@ if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
-  console.log("✅ Firebase Admin initialisé !");
+  
 }
 
 const db = admin.firestore();
@@ -37,11 +37,11 @@ module.exports = async (req, res) => {
       isApproved: true,
     });
 
-    console.log(`✅ Claims définis pour UID: ${uid}, Rôle: ${role}`);
+    
     res.status(200).json({ success: true, message: "Claims ajoutés avec succès." });
 
   } catch (error) {
-    console.error("❌ Erreur lors de l'ajout des claims :", error);
+    
     res.status(500).json({ success: false, message: "Erreur interne lors de l'ajout des claims." });
   }
 };

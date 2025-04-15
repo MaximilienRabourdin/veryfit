@@ -404,11 +404,11 @@ async function importRevendeurs() {
     for (const revendeur of revendeurs) {
       const userRef = db.collection("users_webapp").doc(revendeur.codeAdherent);
       await userRef.set(revendeur);
-      console.log(`✅ Revendeur ajouté : ${revendeur.company}`);
+      
     }
-    console.log("🎉 Tous les revendeurs ont été ajoutés avec succès !");
+    
   } catch (error) {
-    console.error("❌ Erreur lors de l'importation des revendeurs :", error);
+    
   }
 }
 

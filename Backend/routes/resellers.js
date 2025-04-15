@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
   const { data, error } = await supabase.from('resellers').select('*');
 
   if (error) {
-    console.error("Erreur lors de la récupération des revendeurs :", error);
+    
     return res.status(500).json({ msg: 'Erreur lors de la récupération des revendeurs' });
   }
 
@@ -24,7 +24,7 @@ router.post('/create', async (req, res) => {
     .insert([{ name, region, contact }]);
 
   if (error) {
-    console.error("Erreur lors de la création :", error);
+    
     return res.status(500).json({ msg: 'Erreur lors de la création du revendeur' });
   }
 

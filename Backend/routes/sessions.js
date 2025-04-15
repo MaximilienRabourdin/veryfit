@@ -15,7 +15,7 @@ router.post("/track-session", async (req, res) => {
       );
       res.status(200).json({ message: "Session enregistrée." });
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement de la session :", error);
+      
       res.status(500).json({ message: "Erreur interne du serveur." });
     }
   });

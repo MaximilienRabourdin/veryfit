@@ -24,7 +24,7 @@ async function addProductTypes() {
     await db.collection("formTemplates").doc(template).update({
       typesDePorte,
     });
-    console.log(`Types de porte ajoutés pour ${template}`);
+    
   }
 }
 

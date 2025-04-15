@@ -11,11 +11,11 @@ const checkClaims = async (req, res, next) => {
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
-    console.log("✅ Token décodé avec succès :", decodedToken); // Ajoutez un log pour déboguer
+     // Ajoutez un log pour déboguer
     req.user = decodedToken; // Ajoutez les claims au `req.user`
     next();
   } catch (error) {
-    console.error("❌ Erreur lors de la vérification du token :", error.message);
+    
     res.status(401).json({ success: false, message: "Token invalide." });
   }
 };

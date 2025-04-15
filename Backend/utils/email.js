@@ -52,9 +52,9 @@ const sendEmailToFit = async ({ subject, html }) => {
       subject,
       html,
     });
-    console.log("📧 Email envoyé à FIT.");
+    
   } catch (error) {
-    console.error("❌ Erreur envoi email à FIT :", error);
+    
   }
 };
 

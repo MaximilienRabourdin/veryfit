@@ -18,7 +18,7 @@ const checkRole = (requiredRoles) => {
 
       next(); // Accès autorisé
     } catch (error) {
-      console.error("Erreur lors de la vérification du rôle :", error);
+      
       return res.status(403).json({ success: false, message: "Accès refusé : Erreur de vérification." });
     }
   };

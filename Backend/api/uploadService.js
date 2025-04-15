@@ -23,7 +23,7 @@ const uploadFile = async (req, res) => {
     });
 
     stream.on("error", (err) => {
-      console.error("Erreur d'upload :", err);
+      
       return res.status(500).json({ error: "Erreur lors du téléversement." });
     });
 
@@ -35,7 +35,7 @@ const uploadFile = async (req, res) => {
 
     stream.end(file.buffer);
   } catch (error) {
-    console.error("Erreur serveur :", error);
+    
     res.status(500).json({ error: "Erreur lors de l'upload du fichier." });
   }
 };

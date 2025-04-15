@@ -92,11 +92,11 @@ const seedFirestore = async () => {
 
       // Ajouter ou mettre à jour les données
       await formTemplatesRef.set(roleData, { merge: true });
-      console.log(`Données ajoutées/ajustées avec succès pour : ${role}`);
+      
     }
-    console.log("Toutes les données ont été injectées avec succès !");
+    
   } catch (error) {
-    console.error("Erreur lors de l'injection des données :", error);
+    
   }
 };
 

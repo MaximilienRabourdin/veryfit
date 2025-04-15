@@ -16,7 +16,7 @@ exports.createDeletionRequest = async (req, res) => {
     });
     res.status(201).json({ message: "Demande de suppression créée avec succès !" });
   } catch (error) {
-    console.error("Erreur lors de la création de la demande :", error);
+    
     res.status(500).json({ message: "Erreur interne du serveur" });
   }
 };
@@ -34,7 +34,7 @@ exports.getDeletionRequests = async (req, res) => {
 
     res.status(200).json(requests);
   } catch (error) {
-    console.error("Erreur lors de la récupération des demandes :", error);
+    
     res.status(500).json({ message: "Erreur interne du serveur" });
   }
 };
@@ -54,7 +54,7 @@ exports.updateDeletionRequest = async (req, res) => {
     });
     res.status(200).json({ message: "Demande mise à jour avec succès !" });
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de la demande :", error);
+    
     res.status(500).json({ message: "Erreur interne du serveur" });
   }
 };

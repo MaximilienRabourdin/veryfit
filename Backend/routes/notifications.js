@@ -10,7 +10,7 @@ router.post("/sendNotification", async (req, res) => {
     await sendOrderNotificationEmail(email, orderDetails);
     res.status(200).json({ message: "Email envoyé avec succès" });
   } catch (error) {
-    console.error("Erreur lors de l'envoi de l'email :", error);
+    
     res.status(500).json({ message: "Erreur lors de l'envoi de l'email", error });
   }
 });

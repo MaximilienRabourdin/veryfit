@@ -19,7 +19,7 @@ export const generatePdfForDossier = async (dossierId) => {
 
     return fileUrl; // Retourne l'URL du fichier PDF sur Google Drive
   } catch (error) {
-    console.error("Erreur lors de la génération du PDF :", error);
+    
     throw error; // Relancer l'erreur pour une gestion plus globale
   }
 };

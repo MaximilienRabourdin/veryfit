@@ -21,7 +21,7 @@ const createAccount = async (req, res) => {
 
     res.status(201).json({ success: true, message: "Compte créé avec succès." });
   } catch (error) {
-    console.error("Erreur lors de la création du compte :", error);
+    
     res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 };
@@ -34,10 +34,10 @@ const getUnapprovedUsers = async (req, res) => {
     const snapshot = await db.collection("users").where("isApproved", "==", false).get();
     const users = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
 
-    console.log("Comptes non approuvés récupérés :", users);
+    
     return res.status(200).json({ success: true, users });
   } catch (error) {
-    console.error("Erreur lors de la récupération des comptes non approuvés :", error);
+    
     return res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 };
@@ -63,10 +63,10 @@ const validateAccount = async (req, res) => {
 
     await admin.auth().setCustomUserClaims(uid, { role: userData.role, isApproved: true });
 
-    console.log(`Compte ${uid} validé avec succès.`);
+    
     return res.status(200).json({ success: true, message: "Compte validé avec succès." });
   } catch (error) {
-    console.error("Erreur lors de la validation du compte :", error);
+    
     return res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 };
@@ -104,7 +104,7 @@ const login = async (req, res) => {
       message: "Connexion réussie.",
     });
   } catch (error) {
-    console.error("Erreur lors de la connexion :", error);
+    
     res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 };
@@ -127,7 +127,7 @@ const forgotPassword = async (req, res) => {
       message: "Lien de réinitialisation envoyé avec succès.",
     });
   } catch (error) {
-    console.error("Erreur lors de la réinitialisation du mot de passe :", error);
+    
     return res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 };
@@ -146,7 +146,7 @@ const deleteAccount = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Compte supprimé avec succès." });
   } catch (error) {
-    console.error("Erreur lors de la suppression du compte :", error);
+    
     return res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 };
@@ -159,7 +159,7 @@ const getApprovedUsers = async (req, res) => {
 
     return res.status(200).json({ success: true, users });
   } catch (error) {
-    console.error("Erreur lors de la récupération des utilisateurs approuvés :", error);
+    
     return res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 };
@@ -198,7 +198,7 @@ const connexion = async (req, res) => {
       message: "Connexion réussie.",
     });
   } catch (error) {
-    console.error("Erreur lors de la connexion :", error);
+    
     return res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 };
@@ -223,7 +223,7 @@ const getUsersByRole = async (req, res) => {
 
     res.status(200).json({ success: true, users });
   } catch (error) {
-    console.error("Erreur lors de la récupération des utilisateurs par rôle :", error);
+    
     res.status(500).json({ success: false, message: "Erreur interne du serveur." });
   }
 };

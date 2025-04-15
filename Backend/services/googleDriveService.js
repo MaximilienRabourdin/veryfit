@@ -39,10 +39,10 @@ const uploadToDrive = async (buffer, fileName) => {
     });
 
     const fileUrl = `https://drive.google.com/file/d/${fileId}`;
-    console.log("✅ Upload réussi :", fileUrl);
+    
     return fileUrl;
   } catch (error) {
-    console.error("❌ Erreur Google Drive uploadToDrive :", error);
+    
     throw new Error("Erreur upload Google Drive");
   }
 };

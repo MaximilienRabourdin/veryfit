@@ -16,7 +16,7 @@ const upload = multer(); // mémoire
 
 // 🔹 Création de dossier CE avec envoi d'email et fichier éventuel
 router.post("/create", upload.single("file"), async (req, res) => {
-  console.log("🛠 POST /api/dossiers/create");
+  
 
   try {
     const rawData = req.body.data;
@@ -55,7 +55,7 @@ router.post("/create", upload.single("file"), async (req, res) => {
 
     return res.status(201).json({ success: true, dossierId: dossierData.id });
   } catch (error) {
-    console.error("❌ Erreur création dossier:", error);
+    
     return res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 });

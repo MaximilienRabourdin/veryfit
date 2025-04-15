@@ -13,12 +13,12 @@ const db = admin.firestore();
 // Fonction de migration
 async function migrateRevendeursToUsers() {
   try {
-    console.log("Démarrage de la migration...");
+    
 
     const revendeursSnapshot = await db.collection("revendeurs").get();
 
     if (revendeursSnapshot.empty) {
-      console.log("Aucun revendeur trouvé pour la migration.");
+      
       return;
     }
 
@@ -37,9 +37,9 @@ async function migrateRevendeursToUsers() {
     });
 
     await batch.commit();
-    console.log("Migration terminée avec succès !");
+    
   } catch (error) {
-    console.error("Erreur lors de la migration :", error);
+    
   }
 }
 

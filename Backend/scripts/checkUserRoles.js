@@ -18,11 +18,11 @@ const checkRoles = async () => {
   try {
     for (const email of emails) {
       const user = await auth.getUserByEmail(email);
-      console.log(`Utilisateur : ${email}`);
-      console.log(`Claims :`, user.customClaims);
+      
+      
     }
   } catch (error) {
-    console.error(`Erreur pour l'utilisateur ${email} :`, error.message);
+    
   }
 };
 

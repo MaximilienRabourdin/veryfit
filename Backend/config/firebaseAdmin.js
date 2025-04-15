@@ -14,9 +14,7 @@ if (!admin.apps.length) {
       storageBucket: "fitdoorswebapp-79538.appspot.com",
     });
 
-    console.log("✅ Firebase Admin initialisé !");
   } catch (error) {
-    console.error("❌ Erreur lors de l'initialisation de Firebase Admin :", error);
     process.exit(1);
   }
 }
@@ -30,7 +28,6 @@ const verifyToken = async (req, res, next) => {
   const authorization = req.headers.authorization;
 
   if (!authorization || !authorization.startsWith("Bearer ")) {
-    console.warn("⚠ Token manquant ou mal formé !");
     return res.status(401).json({
       success: false,
       message: "Token manquant ou mal formé.",
@@ -41,10 +38,8 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
-    console.log("✅ Token vérifié :", decodedToken);
 
     if (!decodedToken.role) {
-      console.warn("⚠ Aucun rôle défini dans les claims Firebase !");
       return res.status(403).json({
         success: false,
         message: "Accès refusé : rôle manquant.",
@@ -54,7 +49,6 @@ const verifyToken = async (req, res, next) => {
     req.user = decodedToken; // Ajoute les infos utilisateur à la requête
     next();
   } catch (error) {
-    console.error("❌ Erreur de vérification du token :", error.message);
     return res.status(401).json({
       success: false,
       message: "Token invalide ou expiré.",
@@ -79,10 +73,10 @@ const uploadFileToStorage = async (file) => {
     await fileUpload.makePublic();
 
     const fileUrl = `https://storage.googleapis.com/${storage.name}/${fileName}`;
-    console.log("✅ Fichier uploadé :", fileUrl);
+    
     return fileUrl;
   } catch (error) {
-    console.error("❌ Erreur lors de l'upload du fichier :", error);
+    
     throw new Error("Impossible d'uploader le fichier.");
   }
 };

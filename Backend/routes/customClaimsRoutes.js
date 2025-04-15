@@ -13,7 +13,7 @@ router.post("/setCustomClaims", async (req, res) => {
     await admin.auth().setCustomUserClaims(uid, { role, isApproved: true });
     res.status(200).json({ message: "✅ Custom Claims définis avec succès." });
   } catch (error) {
-    console.error("❌ Erreur Firebase :", error);
+    
     res.status(500).json({ error: "Erreur interne du serveur." });
   }
 });

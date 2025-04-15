@@ -50,7 +50,7 @@ const generateDeclarationPDF = async (req, res) => {
       url: `http://localhost:5000/uploads/${filename}`,
     });
   } catch (error) {
-    console.error("Erreur génération PDF :", error);
+    
     res.status(500).json({ error: "Erreur serveur" });
   }
 };

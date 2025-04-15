@@ -15,7 +15,7 @@ exports.getStats = async (req, res) => {
 
     res.status(200).json(stats);
   } catch (error) {
-    console.error("Erreur lors de la récupération des statistiques :", error);
+    
     res.status(500).json({ message: "Erreur interne du serveur" });
   }
 };

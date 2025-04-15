@@ -9,8 +9,8 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendOrderNotificationEmail = async (email, orderDetails) => {
-  console.log("Préparation de l'email pour :", email);
-  console.log("Détails de la commande :", orderDetails);
+  
+  
 
   const { orderName, referenceNumber, affairNumber, plateNumber, deliveryDate } = orderDetails;
 
@@ -37,9 +37,9 @@ L'équipe FIT`,
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`E-mail envoyé avec succès : ${info.response}`);
+    
   } catch (error) {
-    console.error("Erreur lors de l'envoi de l'e-mail :", error.message);
+    
     throw error;
   }
 };

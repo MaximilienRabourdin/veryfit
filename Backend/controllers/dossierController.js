@@ -53,7 +53,7 @@ const createDossier = async (req, res) => {
 
     return res.status(201).json({ success: true, dossierId: parsed.id });
   } catch (error) {
-    console.error("❌ Erreur dans createDossier :", error);
+    
     return res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };
@@ -119,7 +119,7 @@ const generateDeclarationCEForProduct = async (req, res) => {
 
     return res.json({ success: true, url: fileUrl });
   } catch (error) {
-    console.error("❌ Erreur génération déclaration CE produit :", error);
+    
     res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };
@@ -185,7 +185,7 @@ const generateDeclarationMontageForProduct = async (req, res) => {
 
     return res.json({ success: true, url: fileUrl });
   } catch (error) {
-    console.error("❌ Erreur génération déclaration de montage :", error);
+    
     res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };
@@ -217,7 +217,7 @@ const updateDocumentStatus = async (req, res) => {
 
     return res.json({ success: true });
   } catch (error) {
-    console.error("❌ Erreur updateDocumentStatus :", error);
+    
     res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };
@@ -239,9 +239,9 @@ const sendNotificationToFit = async ({ type, dossierId, produitId, message }) =>
       html: `<p>${message}</p><p>Dossier : ${dossierId}</p><p>Produit : ${produitId}</p>`,
     });
 
-    console.log("🔔 Notification + Email envoyé à FIT :", message);
+    
   } catch (error) {
-    console.error("❌ Erreur notification/email FIT :", error);
+    
   }
 };
 

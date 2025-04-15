@@ -51,7 +51,7 @@ router.post("/upload/declaration-montage", upload.single("file"), async (req, re
 
     res.json({ success: true, fileUrl });
   } catch (error) {
-    console.error("❌ Erreur Firestore :", error);
+    
     res.status(500).json({ error: "Erreur lors de la mise à jour de Firestore." });
   }
 });

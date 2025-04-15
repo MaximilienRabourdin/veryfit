@@ -38,7 +38,7 @@ router.post("/upload/conformite-ce", upload.single("file"), async (req, res) => 
 
     res.json({ message: "Fichier reçu", fileName, url: downloadUrl });
   } catch (error) {
-    console.error("Erreur upload :", error);
+    
     res.status(500).json({ error: "Erreur serveur." });
   }
 });

@@ -24,7 +24,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // ✅ Logger
 app.use((req, res, next) => {
-  console.log(`🛠 Requête reçue : ${req.method} ${req.path}`);
   next();
 });
 
@@ -55,6 +54,5 @@ app.use((req, res) => {
 // ✅ Lancement du serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Serveur en cours d'exécution sur le port ${PORT}`);
 });
 

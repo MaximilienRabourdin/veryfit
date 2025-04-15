@@ -4,9 +4,9 @@ const setPassword = async (email, newPassword) => {
   try {
     const userRecord = await admin.auth().getUserByEmail(email);
     await admin.auth().updateUser(userRecord.uid, { password: newPassword });
-    console.log(`Mot de passe mis à jour pour : ${email}`);
+    
   } catch (error) {
-    console.error(`Erreur pour ${email} :`, error.message);
+    
   }
 };
 

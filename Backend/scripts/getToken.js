@@ -28,9 +28,9 @@ const getToken = async () => {
 
     // Récupération du token
     const token = await user.getIdToken();
-    console.log("✅ Token récupéré :", token);
+    
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération du token :", error);
+    
   }
 };
 

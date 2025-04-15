@@ -9,10 +9,10 @@ const usersToMigrate = [
 
 const migrateAuthUsersToFirestore = async () => {
   try {
-    console.log("Début de la migration des utilisateurs...");
+    
 
     for (const user of usersToMigrate) {
-      console.log(`Traitement de l'utilisateur : ${user.email}`);
+      
 
       // Utilisez admin.auth() pour récupérer l'utilisateur
       const userRecord = await admin.auth().getUserByEmail(user.email);
@@ -27,12 +27,12 @@ const migrateAuthUsersToFirestore = async () => {
       };
 
       await db.collection("users").doc(userRecord.uid).set(userData, { merge: true });
-      console.log(`Utilisateur ajouté à Firestore : ${user.email}`);
+      
     }
 
-    console.log("Migration terminée avec succès !");
+    
   } catch (error) {
-    console.error("Erreur lors de la migration des utilisateurs :", error);
+    
   }
 };
 

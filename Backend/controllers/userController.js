@@ -19,9 +19,9 @@ const assignCustomClaims = async (uid, role) => {
       isApproved: true, // ou false si besoin d'une validation manuelle
     });
 
-    console.log(`✅ Rôle "${role}" assigné à l’utilisateur ${uid}`);
+    
   } catch (error) {
-    console.error("❌ Erreur lors de l’assignation des custom claims :", error);
+    
   }
 };
 
@@ -37,7 +37,7 @@ const getUserClaims = async (req, res) => {
       claims: user.customClaims || {},
     });
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération des claims :", error);
+    
     res.status(500).json({ error: "Erreur interne du serveur." });
   }
 };
@@ -58,12 +58,12 @@ const setCustomClaims = async (req, res) => {
 
     res.status(200).json({ message: "✅ Custom Claims définis avec succès." });
   } catch (error) {
-    console.error("❌ Erreur lors de la définition des Custom Claims :", error);
+    
     res.status(500).json({ error: "Erreur interne du serveur." });
   }
 };
 
 // ✅ Vérification avant exportation
-console.log("✅ userController exporte :", { setCustomClaims, getUserClaims });
+
 
 module.exports = { setCustomClaims, getUserClaims };

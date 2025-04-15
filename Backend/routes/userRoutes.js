@@ -4,7 +4,7 @@ const verifyToken = require("../middlewares/verifyToken");
 
 // ✅ Route pour créer un compte
 router.post("/", (req, res) => {
-  console.log("📩 Requête reçue :", req.body);
+  
   res.json({ success: true, message: "Compte créé avec succès !" });
 });
 
@@ -12,7 +12,7 @@ router.post("/", (req, res) => {
 // ✅ Import correct des fonctions depuis userController.js
 const userController = require("../controllers/userController");
 
-console.log("✅ Fonctions importées depuis userController :", userController);
+
 
 // ✅ Vérification si les fonctions sont bien définies
 if (!userController || !userController.getUserClaims || !userController.setCustomClaims) {
