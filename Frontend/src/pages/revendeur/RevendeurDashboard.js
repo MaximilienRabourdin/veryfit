@@ -61,7 +61,7 @@ const RevendeurDashboard = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold mb-6 text-darkBlue">Mes Dossiers CE</h1>
 
       {loading ? (
@@ -101,13 +101,13 @@ const RevendeurDashboard = () => {
                 dossier.produits.some((p) => p.typeFormulaire) ? (
                   dossier.produits.map((p, index) => (
                     <li key={index} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <div>
+                      <div className="flex flex-wrap justify-between items-center">
+                        <div className="w-full sm:w-2/3">
                           <strong>{p.name || "Produit inconnu"}</strong> — Quantité :{" "}
                           {p.quantity || 1}
                         </div>
 
-                        <div className="space-x-3 flex items-center">
+                        <div className="space-x-3 flex items-center w-full sm:w-1/3 justify-end mt-2 sm:mt-0">
                           {/* Déclaration de conformité CE en base64 */}
                           {dossier.declarationCE?.base64 && (
                             <a
