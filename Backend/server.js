@@ -13,12 +13,11 @@ const declarationRoutes = require("./routes/declarationRoutes");
 
 const app = express();
 
-
 console.log("🚀 Server init...");
 
 // ✅ Middleware
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", "https://veryfit.vercel.app"],  // Ajout du domaine de production
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
@@ -46,17 +45,13 @@ app.use("/api/users", userRoutes);
 const customClaimsRoutes = require("./routes/customClaims");
 app.use("/api/custom-claims", customClaimsRoutes);
 
-
 // ✅ 404
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route non trouvée" });
 });
-
-
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`✅ Serveur lancé sur le port ${PORT}`);
 });
-

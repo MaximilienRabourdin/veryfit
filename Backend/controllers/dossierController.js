@@ -5,7 +5,6 @@ const path = require("path");
 const { sendEmailToDestinataire, sendEmailToFit } = require("../utils/email");
 const { getDoc, updateDoc } = require("firebase-admin/firestore");
 
-
 // 🔹 Créer un dossier CE
 const createDossier = async (req, res) => {
   try {
@@ -53,8 +52,9 @@ const createDossier = async (req, res) => {
 
     return res.status(201).json({ success: true, dossierId: parsed.id });
   } catch (error) {
-    
-    return res.status(500).json({ error: "Erreur serveur", details: error.message });
+    return res
+      .status(500)
+      .json({ error: "Erreur serveur", details: error.message });
   }
 };
 
@@ -65,7 +65,8 @@ const generateDeclarationCEForProduct = async (req, res) => {
 
     const dossierRef = db.collection("dossiers").doc(dossierId);
     const snapshot = await getDoc(dossierRef);
-    if (!snapshot.exists()) return res.status(404).json({ error: "Dossier introuvable" });
+    if (!snapshot.exists())
+      return res.status(404).json({ error: "Dossier introuvable" });
 
     const dossier = snapshot.data();
     const produit = dossier.produits.find((p) => p.productId === productId);
@@ -81,7 +82,11 @@ const generateDeclarationCEForProduct = async (req, res) => {
 
     draw("📄 Déclaration CE", 50, height - 50);
     draw(`Nom produit : ${produit.name}`, 50, height - 80);
-    draw(`Numéro de série : ${produit?.porte?.NumeroSerie || "—"}`, 50, height - 100);
+    draw(
+      `Numéro de série : ${produit?.porte?.NumeroSerie || "—"}`,
+      50,
+      height - 100
+    );
     draw(`Type : ${produit.typeFormulaire || "—"}`, 50, height - 120);
     draw(`Destinataire : ${dossier.revendeur || "—"}`, 50, height - 140);
     draw(`Livraison : ${dossier.deliveryDate || "—"}`, 50, height - 160);
@@ -92,7 +97,7 @@ const generateDeclarationCEForProduct = async (req, res) => {
     const filePath = path.join(__dirname, `../../uploads/${fileName}`);
     fs.writeFileSync(filePath, pdfBytes);
 
-    const fileUrl = `http://localhost:5000/uploads/${fileName}`;
+    const fileUrl = `http://veryfit-production.up.railway.app/uploads/${fileName}`;
 
     const produitsMaj = dossier.produits.map((p) =>
       p.productId === productId
@@ -107,8 +112,10 @@ const generateDeclarationCEForProduct = async (req, res) => {
     );
 
     await dossierRef.update({ produits: produitsMaj });
-    await db.collection("orders").doc(dossierId).update({ produits: produitsMaj });
-
+    await db
+      .collection("orders")
+      .doc(dossierId)
+      .update({ produits: produitsMaj });
 
     await db.collection("notifications").add({
       message: `📄 Déclaration CE générée pour "${produit.name}" (dossier ${dossier.orderName})`,
@@ -119,7 +126,6 @@ const generateDeclarationCEForProduct = async (req, res) => {
 
     return res.json({ success: true, url: fileUrl });
   } catch (error) {
-    
     res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };
@@ -131,7 +137,8 @@ const generateDeclarationMontageForProduct = async (req, res) => {
 
     const dossierRef = db.collection("dossiers").doc(dossierId);
     const snapshot = await getDoc(dossierRef);
-    if (!snapshot.exists()) return res.status(404).json({ error: "Dossier introuvable" });
+    if (!snapshot.exists())
+      return res.status(404).json({ error: "Dossier introuvable" });
 
     const dossier = snapshot.data();
     const produit = dossier.produits.find((p) => p.productId === productId);
@@ -147,7 +154,11 @@ const generateDeclarationMontageForProduct = async (req, res) => {
 
     draw("📄 Déclaration de montage", 50, height - 50);
     draw(`Nom produit : ${produit.name}`, 50, height - 80);
-    draw(`Numéro de série : ${produit?.porte?.NumeroSerie || "—"}`, 50, height - 100);
+    draw(
+      `Numéro de série : ${produit?.porte?.NumeroSerie || "—"}`,
+      50,
+      height - 100
+    );
     draw(`Type : ${produit.typeFormulaire || "—"}`, 50, height - 120);
     draw(`Destinataire : ${dossier.revendeur || "—"}`, 50, height - 140);
     draw(`Livraison : ${dossier.deliveryDate || "—"}`, 50, height - 160);
@@ -158,7 +169,7 @@ const generateDeclarationMontageForProduct = async (req, res) => {
     const filePath = path.join(__dirname, `../../uploads/${fileName}`);
     fs.writeFileSync(filePath, pdfBytes);
 
-    const fileUrl = `http://localhost:5000/uploads/${fileName}`;
+    const fileUrl = `http://veryfit-production.up.railway.app/uploads/${fileName}`;
 
     const produitsMaj = dossier.produits.map((p) =>
       p.productId === productId
@@ -173,8 +184,10 @@ const generateDeclarationMontageForProduct = async (req, res) => {
     );
 
     await dossierRef.update({ produits: produitsMaj });
-    await db.collection("orders").doc(dossierId).update({ produits: produitsMaj });
-
+    await db
+      .collection("orders")
+      .doc(dossierId)
+      .update({ produits: produitsMaj });
 
     await db.collection("notifications").add({
       message: `📄 Déclaration de montage générée pour "${produit.name}" (dossier ${dossier.orderName})`,
@@ -185,7 +198,6 @@ const generateDeclarationMontageForProduct = async (req, res) => {
 
     return res.json({ success: true, url: fileUrl });
   } catch (error) {
-    
     res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };
@@ -197,7 +209,8 @@ const updateDocumentStatus = async (req, res) => {
 
     const dossierRef = db.collection("dossiers").doc(dossierId);
     const snapshot = await getDoc(dossierRef);
-    if (!snapshot.exists()) return res.status(404).json({ error: "Dossier introuvable" });
+    if (!snapshot.exists())
+      return res.status(404).json({ error: "Dossier introuvable" });
 
     const dossier = snapshot.data();
     const produitsMaj = dossier.produits.map((p) => {
@@ -217,12 +230,16 @@ const updateDocumentStatus = async (req, res) => {
 
     return res.json({ success: true });
   } catch (error) {
-    
     res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };
 
-const sendNotificationToFit = async ({ type, dossierId, produitId, message }) => {
+const sendNotificationToFit = async ({
+  type,
+  dossierId,
+  produitId,
+  message,
+}) => {
   try {
     await db.collection("notifications").add({
       type,
@@ -238,11 +255,7 @@ const sendNotificationToFit = async ({ type, dossierId, produitId, message }) =>
       subject: `[FIT DOORS] Nouvelle déclaration reçue`,
       html: `<p>${message}</p><p>Dossier : ${dossierId}</p><p>Produit : ${produitId}</p>`,
     });
-
-    
-  } catch (error) {
-    
-  }
+  } catch (error) {}
 };
 
 module.exports = {
@@ -250,5 +263,5 @@ module.exports = {
   updateDocumentStatus,
   generateDeclarationCEForProduct,
   generateDeclarationMontageForProduct,
-  sendNotificationToFit
+  sendNotificationToFit,
 };
