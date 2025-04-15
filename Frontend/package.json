@@ -1,25 +1,17 @@
 {
-<<<<<<< HEAD
-  "dependencies": {
-    "@supabase/supabase-js": "^2.46.1",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^3.0.1"
-  },
-  "devDependencies": {
-    "replace-in-file": "^8.3.0"
-=======
   "name": "fit-doors-webapp",
   "version": "0.1.0",
   "private": true,
   "proxy": "http://localhost:5000",
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.4",
+    "@supabase/supabase-js": "^2.46.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.8",
     "firebase": "^11.0.2",
     "firebase-admin": "^13.0.1",
+    "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "nodemailer": "^6.9.16",
     "pdf-lib": "^1.17.1",
@@ -61,7 +53,7 @@
   "devDependencies": {
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.13"
->>>>>>> 8d900e8e (update frontend)
+    "tailwindcss": "^3.4.13",
+    "replace-in-file": "^8.3.0"
   }
 }
