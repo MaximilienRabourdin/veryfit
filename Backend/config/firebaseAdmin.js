@@ -1,3 +1,6 @@
+console.log("📦 Chargement firebaseAdmin.js...");
+
+
 const admin = require("firebase-admin");
 const { getStorage } = require("firebase-admin/storage");
 const path = require("path");
