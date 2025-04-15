@@ -13,6 +13,9 @@ const declarationRoutes = require("./routes/declarationRoutes");
 
 const app = express();
 
+
+console.log("🚀 Server init...");
+
 // ✅ Middleware
 app.use(cors({
   origin: "http://localhost:3000",
@@ -51,8 +54,9 @@ app.use((req, res) => {
 
 
 
-// ✅ Lancement du serveur
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
+  console.log(`✅ Serveur lancé sur le port ${PORT}`);
 });
 
