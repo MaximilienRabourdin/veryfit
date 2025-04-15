@@ -22,10 +22,13 @@ const UploadConformiteCE = ({ orderId, onUploadSuccess }) => {
 
     try {
       setUploading(true);
-      const res = await fetch("http://localhost:5000/upload/conformite-ce", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        "http://veryfit-production.up.railway.app/upload/conformite-ce",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur lors de l'envoi");
@@ -43,7 +46,9 @@ const UploadConformiteCE = ({ orderId, onUploadSuccess }) => {
 
   return (
     <div className="bg-white p-4 rounded shadow mt-4">
-      <h2 className="text-lg font-bold mb-2">Déposer la déclaration CE (PDF)</h2>
+      <h2 className="text-lg font-bold mb-2">
+        Déposer la déclaration CE (PDF)
+      </h2>
 
       <input
         type="file"

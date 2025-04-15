@@ -37,10 +37,13 @@ const PdfSignatureUploader = ({ onUploadSuccess }) => {
       formData.append("signatureText", signature);
       formData.append("userId", "test-user"); // À remplacer par l'ID réel
 
-      const response = await fetch("http://localhost:5000/api/documents/sign-pdf", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "http://veryfit-production.up.railway.app/api/documents/sign-pdf",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
@@ -58,7 +61,9 @@ const PdfSignatureUploader = ({ onUploadSuccess }) => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-lg mx-auto">
-      <h2 className="text-lg font-semibold text-darkBlue mb-4">Signature & Upload PDF</h2>
+      <h2 className="text-lg font-semibold text-darkBlue mb-4">
+        Signature & Upload PDF
+      </h2>
 
       {/* Sélection du fichier */}
       <input

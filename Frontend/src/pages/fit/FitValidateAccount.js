@@ -12,7 +12,9 @@ const FitValidateAccounts = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("http://localhost:5000/api/auth/unapproved");
+      const response = await axios.get(
+        "http://veryfit-production.up.railway.app/api/auth/unapproved"
+      );
       if (response.data.success) {
         setUsers(response.data.data);
       } else {
@@ -30,7 +32,9 @@ const FitValidateAccounts = () => {
   const handleValidate = async (userId, email) => {
     if (window.confirm("Êtes-vous sûr de vouloir valider ce compte ?")) {
       try {
-        await axios.put(`http://localhost:5000/api/auth/validate/${userId}`);
+        await axios.put(
+          `http://veryfit-production.up.railway.app/api/auth/validate/${userId}`
+        );
         setSuccessMessage(`Le compte ${email} a été validé avec succès !`);
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
       } catch (err) {
@@ -47,11 +51,15 @@ const FitValidateAccounts = () => {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-darkBlue mb-6">Validation des Comptes</h1>
+      <h1 className="text-3xl font-bold text-darkBlue mb-6">
+        Validation des Comptes
+      </h1>
 
       {/* Affichage des messages */}
       {error && <p className="text-red-500 mb-4">{error}</p>}
-      {successMessage && <p className="text-green-500 mb-4">{successMessage}</p>}
+      {successMessage && (
+        <p className="text-green-500 mb-4">{successMessage}</p>
+      )}
 
       {/* Liste des utilisateurs */}
       {loading ? (

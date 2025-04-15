@@ -34,12 +34,20 @@ const DeclarationCEForm = ({ onFinish }) => {
     page.drawText("Déclaration de conformité CE", { x: 50, y: 360, size: 18 });
     page.drawText(`Entreprise : ${formData.entreprise}`, { x: 50, y: 320 });
     page.drawText(`Responsable : ${formData.responsable}`, { x: 50, y: 300 });
-    page.drawText(`N° Série Porte : ${formData.numeroSeriePorte}`, { x: 50, y: 280 });
-    page.drawText(`Immatriculation : ${formData.immatriculation}`, { x: 50, y: 260 });
+    page.drawText(`N° Série Porte : ${formData.numeroSeriePorte}`, {
+      x: 50,
+      y: 280,
+    });
+    page.drawText(`Immatriculation : ${formData.immatriculation}`, {
+      x: 50,
+      y: 260,
+    });
     page.drawText(`Châssis : ${formData.numeroChassis}`, { x: 50, y: 240 });
     page.drawText(`Date : ${formData.date}`, { x: 50, y: 220 });
 
-    const sigImage = sigCanvas.current.getTrimmedCanvas().toDataURL("image/png");
+    const sigImage = sigCanvas.current
+      .getTrimmedCanvas()
+      .toDataURL("image/png");
     const response = await fetch(sigImage);
     const imageBytes = await response.arrayBuffer();
     const pngImage = await pdfDoc.embedPng(imageBytes);
@@ -62,15 +70,20 @@ const DeclarationCEForm = ({ onFinish }) => {
       const pdf = await generatePDF();
       if (!pdf) return;
 
-      const file = new File([pdf], "declaration_ce.pdf", { type: "application/pdf" });
+      const file = new File([pdf], "declaration_ce.pdf", {
+        type: "application/pdf",
+      });
       const formDataToSend = new FormData();
       formDataToSend.append("file", file);
       formDataToSend.append("type", "declaration_ce");
 
-      const res = await fetch("http://localhost:5000/upload/declaration-ce", {
-        method: "POST",
-        body: formDataToSend,
-      });
+      const res = await fetch(
+        "http://veryfit-production.up.railway.app/upload/declaration-ce",
+        {
+          method: "POST",
+          body: formDataToSend,
+        }
+      );
 
       if (!res.ok) throw new Error("Erreur serveur lors de l'envoi du PDF");
 
@@ -107,9 +120,19 @@ const DeclarationCEForm = ({ onFinish }) => {
           <SignatureCanvas
             ref={sigCanvas}
             penColor="black"
-            canvasProps={{ width: 500, height: 150, className: "border rounded w-full" }}
+            canvasProps={{
+              width: 500,
+              height: 150,
+              className: "border rounded w-full",
+            }}
           />
-          <button type="button" onClick={clearSignature} className="text-red-500 mt-2">Effacer la signature</button>
+          <button
+            type="button"
+            onClick={clearSignature}
+            className="text-red-500 mt-2"
+          >
+            Effacer la signature
+          </button>
         </div>
 
         <button
@@ -123,7 +146,13 @@ const DeclarationCEForm = ({ onFinish }) => {
         {pdfUrl && (
           <div className="mt-4">
             <p className="text-green-600">✅ PDF généré :</p>
-            <a href={pdfUrl} target="_blank" className="text-blue-500 underline">Voir le document</a>
+            <a
+              href={pdfUrl}
+              target="_blank"
+              className="text-blue-500 underline"
+            >
+              Voir le document
+            </a>
           </div>
         )}
       </form>

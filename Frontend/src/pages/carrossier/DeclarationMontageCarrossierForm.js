@@ -33,21 +33,35 @@ const DeclarationMontageCarrossier = () => {
   };
 
   const generateSignedPDF = async (formData, signatureImage) => {
-    const existingPdfBytes = await fetch(templatePdf).then((res) => res.arrayBuffer());
+    const existingPdfBytes = await fetch(templatePdf).then((res) =>
+      res.arrayBuffer()
+    );
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const page = pdfDoc.getPages()[0];
     const { width, height } = page.getSize();
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const signatureImageBytes = await fetch(signatureImage).then((res) => res.arrayBuffer());
+    const signatureImageBytes = await fetch(signatureImage).then((res) =>
+      res.arrayBuffer()
+    );
     const signatureImageEmbed = await pdfDoc.embedPng(signatureImageBytes);
 
-    page.drawText(formData.entreprise || "", { x: 60, y: height - 150, size: 12, font });
-    page.drawText(`${formData.responsableNom || ""} - ${formData.responsableFonction || ""}`, {
-      x: 310,
+    page.drawText(formData.entreprise || "", {
+      x: 60,
       y: height - 150,
       size: 12,
       font,
     });
+    page.drawText(
+      `${formData.responsableNom || ""} - ${
+        formData.responsableFonction || ""
+      }`,
+      {
+        x: 310,
+        y: height - 150,
+        size: 12,
+        font,
+      }
+    );
     page.drawText(formData.remarques || "", {
       x: 60,
       y: height - 290,
@@ -56,8 +70,18 @@ const DeclarationMontageCarrossier = () => {
       maxWidth: 460,
       lineHeight: 14,
     });
-    page.drawText(formData.date || "", { x: 60, y: height - 340, size: 12, font });
-    page.drawImage(signatureImageEmbed, { x: 320, y: height - 390, width: 200, height: 80 });
+    page.drawText(formData.date || "", {
+      x: 60,
+      y: height - 340,
+      size: 12,
+      font,
+    });
+    page.drawImage(signatureImageEmbed, {
+      x: 320,
+      y: height - 390,
+      width: 200,
+      height: 80,
+    });
 
     const pdfBytes = await pdfDoc.save();
     return new Blob([pdfBytes], { type: "application/pdf" });
@@ -68,19 +92,26 @@ const DeclarationMontageCarrossier = () => {
     setLoading(true);
 
     try {
-      const signatureImage = sigCanvas.current.getTrimmedCanvas().toDataURL("image/png");
+      const signatureImage = sigCanvas.current
+        .getTrimmedCanvas()
+        .toDataURL("image/png");
       const pdfFile = await generateSignedPDF(formData, signatureImage);
       if (!pdfFile) return;
 
-      const fileToSend = new File([pdfFile], "declaration_montage.pdf", { type: "application/pdf" });
+      const fileToSend = new File([pdfFile], "declaration_montage.pdf", {
+        type: "application/pdf",
+      });
       const formDataToSend = new FormData();
       formDataToSend.append("file", fileToSend);
       formDataToSend.append("orderId", orderId);
 
-      const response = await fetch("http://localhost:5000/upload/declaration-montage", {
-        method: "POST",
-        body: formDataToSend,
-      });
+      const response = await fetch(
+        "http://veryfit-production.up.railway.app/upload/declaration-montage",
+        {
+          method: "POST",
+          body: formDataToSend,
+        }
+      );
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Erreur serveur");
@@ -97,7 +128,9 @@ const DeclarationMontageCarrossier = () => {
 
   return (
     <div className="max-w-5xl mx-auto bg-white p-6 shadow rounded">
-      <h1 className="text-2xl font-bold text-darkBlue mb-4">Déclaration de montage (Carrossier)</h1>
+      <h1 className="text-2xl font-bold text-darkBlue mb-4">
+        Déclaration de montage (Carrossier)
+      </h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
@@ -146,13 +179,28 @@ const DeclarationMontageCarrossier = () => {
             className: "border border-gray-300 rounded w-full",
           }}
         />
-        <button type="button" onClick={clearSignature} className="text-red-600 mt-2">Effacer la signature</button>
-        <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded" disabled={loading}>
+        <button
+          type="button"
+          onClick={clearSignature}
+          className="text-red-600 mt-2"
+        >
+          Effacer la signature
+        </button>
+        <button
+          type="submit"
+          className="bg-green-600 text-white px-6 py-2 rounded"
+          disabled={loading}
+        >
           {loading ? "Envoi en cours..." : "Valider et envoyer"}
         </button>
         {pdfUrl && (
           <div className="mt-4">
-            <a href={pdfUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline">
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-600 underline"
+            >
               Voir la déclaration générée
             </a>
           </div>

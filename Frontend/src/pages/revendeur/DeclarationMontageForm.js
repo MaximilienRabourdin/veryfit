@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { useParams } from "react-router-dom";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import templatePdf from "../../medias/declaration_montage_template.pdf"; 
+import templatePdf from "../../medias/declaration_montage_template.pdf";
 
 const DeclarationMontageForm = () => {
   const { orderId } = useParams();
@@ -34,13 +34,17 @@ const DeclarationMontageForm = () => {
 
   const generateSignedPDF = async (formData, signatureImage) => {
     try {
-      const existingPdfBytes = await fetch(templatePdf).then((res) => res.arrayBuffer());
+      const existingPdfBytes = await fetch(templatePdf).then((res) =>
+        res.arrayBuffer()
+      );
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const page = pdfDoc.getPages()[0];
       const { width, height } = page.getSize();
 
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const signatureImageBytes = await fetch(signatureImage).then((res) => res.arrayBuffer());
+      const signatureImageBytes = await fetch(signatureImage).then((res) =>
+        res.arrayBuffer()
+      );
       const signatureImageEmbed = await pdfDoc.embedPng(signatureImageBytes);
 
       page.drawText(formData.entreprise || "", {
@@ -50,12 +54,17 @@ const DeclarationMontageForm = () => {
         font,
       });
 
-      page.drawText(`${formData.responsableNom || ""} - ${formData.responsableFonction || ""}`, {
-        x: 310,
-        y: height - 150,
-        size: 12,
-        font,
-      });
+      page.drawText(
+        `${formData.responsableNom || ""} - ${
+          formData.responsableFonction || ""
+        }`,
+        {
+          x: 310,
+          y: height - 150,
+          size: 12,
+          font,
+        }
+      );
 
       page.drawText(formData.remarques || "", {
         x: 60,
@@ -99,23 +108,30 @@ const DeclarationMontageForm = () => {
     setLoading(true);
 
     try {
-      const signatureImage = sigCanvas.current.getTrimmedCanvas().toDataURL("image/png");
+      const signatureImage = sigCanvas.current
+        .getTrimmedCanvas()
+        .toDataURL("image/png");
       const pdfFile = await generateSignedPDF(formData, signatureImage);
       if (!pdfFile) {
         setLoading(false);
         return;
       }
 
-      const fileToSend = new File([pdfFile], "declaration_montage.pdf", { type: "application/pdf" });
+      const fileToSend = new File([pdfFile], "declaration_montage.pdf", {
+        type: "application/pdf",
+      });
       const formDataToSend = new FormData();
       formDataToSend.append("file", fileToSend);
       formDataToSend.append("userId", userId);
       formDataToSend.append("orderId", orderId);
 
-      const response = await fetch("http://localhost:5000/upload/declaration-montage", {
-        method: "POST",
-        body: formDataToSend,
-      });
+      const response = await fetch(
+        "http://veryfit-production.up.railway.app/upload/declaration-montage",
+        {
+          method: "POST",
+          body: formDataToSend,
+        }
+      );
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Erreur serveur");
@@ -132,7 +148,9 @@ const DeclarationMontageForm = () => {
 
   return (
     <div className="max-w-5xl mx-auto bg-white p-6 shadow-md rounded-lg">
-      <h1 className="text-2xl font-bold mb-6 text-darkBlue">Déclaration de montage</h1>
+      <h1 className="text-2xl font-bold mb-6 text-darkBlue">
+        Déclaration de montage
+      </h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className="block mb-4">
@@ -200,18 +218,33 @@ const DeclarationMontageForm = () => {
             className: "border border-gray-300 rounded w-full",
           }}
         />
-        <button type="button" onClick={clearSignature} className="mt-2 bg-red-500 text-white py-1 px-3 rounded">
+        <button
+          type="button"
+          onClick={clearSignature}
+          className="mt-2 bg-red-500 text-white py-1 px-3 rounded"
+        >
           Effacer la signature
         </button>
 
-        <button type="submit" className="bg-blue-600 text-white py-2 px-4 rounded" disabled={loading}>
+        <button
+          type="submit"
+          className="bg-blue-600 text-white py-2 px-4 rounded"
+          disabled={loading}
+        >
           {loading ? "Envoi en cours..." : "Signer et Envoyer"}
         </button>
 
         {pdfUrl && (
           <div className="mt-6 p-4 bg-gray-100 rounded">
-            <h2 className="text-md font-semibold text-darkBlue">✅ Document signé :</h2>
-            <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+            <h2 className="text-md font-semibold text-darkBlue">
+              ✅ Document signé :
+            </h2>
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
               Voir le document
             </a>
           </div>

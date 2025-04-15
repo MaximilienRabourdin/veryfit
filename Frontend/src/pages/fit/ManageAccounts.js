@@ -16,12 +16,16 @@ const ManageAccounts = () => {
   const fetchAccounts = async () => {
     setLoading(true);
     try {
-      const pendingResponse = await axios.get("http://localhost:5000/api/auth/get-unapproved-users");
-      const validatedResponse = await axios.get("http://localhost:5000/api/auth/get-approved-users");
-  
+      const pendingResponse = await axios.get(
+        "http://veryfit-production.up.railway.app/api/auth/get-unapproved-users"
+      );
+      const validatedResponse = await axios.get(
+        "http://veryfit-production.up.railway.app/api/auth/get-approved-users"
+      );
+
       console.log("Comptes en attente :", pendingResponse.data.users);
       console.log("Comptes validés :", validatedResponse.data.users);
-  
+
       setPendingAccounts(pendingResponse.data.users || []);
       setValidatedAccounts(validatedResponse.data.users || []);
       setError(null);
@@ -32,7 +36,7 @@ const ManageAccounts = () => {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchAccounts();
   }, []);
@@ -41,10 +45,15 @@ const ManageAccounts = () => {
   const handleValidateAccount = async (uid) => {
     setActionLoading((prev) => ({ ...prev, [uid]: true }));
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/validate-account", { uid });
+      const response = await axios.post(
+        "http://veryfit-production.up.railway.app/api/auth/validate-account",
+        { uid }
+      );
       if (response.data.success) {
         setSuccessMessage("Compte validé avec succès !");
-        setPendingAccounts((prev) => prev.filter((account) => account.uid !== uid));
+        setPendingAccounts((prev) =>
+          prev.filter((account) => account.uid !== uid)
+        );
         setValidatedAccounts((prev) => [
           ...prev,
           pendingAccounts.find((account) => account.uid === uid),
@@ -62,10 +71,14 @@ const ManageAccounts = () => {
   const handleDeleteAccount = async (uid) => {
     setActionLoading((prev) => ({ ...prev, [uid]: true }));
     try {
-      const response = await axios.delete(`http://localhost:5000/api/auth/delete-account/${uid}`);
+      const response = await axios.delete(
+        `http://veryfit-production.up.railway.app/api/auth/delete-account/${uid}`
+      );
       if (response.data.success) {
         setSuccessMessage("Compte supprimé avec succès !");
-        setValidatedAccounts((prev) => prev.filter((account) => account.uid !== uid));
+        setValidatedAccounts((prev) =>
+          prev.filter((account) => account.uid !== uid)
+        );
       }
     } catch (err) {
       console.error("Erreur lors de la suppression :", err);
@@ -79,28 +92,35 @@ const ManageAccounts = () => {
   const filteredValidatedAccounts = validatedAccounts.filter(
     (account) =>
       account.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (account.company && account.company.toLowerCase().includes(searchTerm.toLowerCase()))
+      (account.company &&
+        account.company.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
     <div className="p-6 bg-lightGray min-h-screen flex flex-col">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-darkBlue">Gestion des comptes</h1>
+        <h1 className="text-3xl font-bold text-darkBlue">
+          Gestion des comptes
+        </h1>
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
           onClick={() => navigate("/create-account")}
         >
-         + Créer un compte
+          + Créer un compte
         </button>
       </div>
 
       {/* Notifications */}
-      {successMessage && <p className="text-green-500 mb-4">{successMessage}</p>}
+      {successMessage && (
+        <p className="text-green-500 mb-4">{successMessage}</p>
+      )}
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
       {/* Section des comptes en attente de validation */}
       <div className="bg-white shadow-md p-4 rounded mb-6">
-        <h2 className="text-xl font-bold mb-4">Comptes en attente de validation</h2>
+        <h2 className="text-xl font-bold mb-4">
+          Comptes en attente de validation
+        </h2>
         {loading ? (
           <p>Chargement des comptes...</p>
         ) : pendingAccounts.length > 0 ? (
@@ -172,7 +192,9 @@ const ManageAccounts = () => {
                       onClick={() => handleDeleteAccount(account.uid)}
                       disabled={actionLoading[account.uid]}
                     >
-                      {actionLoading[account.uid] ? "Suppression..." : "Supprimer"}
+                      {actionLoading[account.uid]
+                        ? "Suppression..."
+                        : "Supprimer"}
                     </button>
                   </td>
                 </tr>

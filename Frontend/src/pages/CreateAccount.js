@@ -68,7 +68,7 @@ const CreateAccount = () => {
 
       // Étape 3 : Définir les revendications utilisateur via le backend
       const response = await fetch(
-        "http://localhost:5000/api/auth/set-claims",
+        "http://veryfit-production.up.railway.app/api/auth/set-claims",
         {
           method: "POST",
           headers: {
@@ -169,21 +169,19 @@ const CreateAccount = () => {
                 Rôle*
               </label>
               <div className="mb-4">
-            
                 <select
-  id="role"
-  name="role"
-  value={formData.role}
-  onChange={handleChange}
-  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-  required
->
-  <option value="">Sélectionner un rôle</option>
-  <option value="Revendeur">Revendeur</option>
-  <option value="Carrossier">Carrossier</option>
-  <option value="Utilisateur">Utilisateur</option>
-</select>
-
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  required
+                >
+                  <option value="">Sélectionner un rôle</option>
+                  <option value="Revendeur">Revendeur</option>
+                  <option value="Carrossier">Carrossier</option>
+                  <option value="Utilisateur">Utilisateur</option>
+                </select>
               </div>
             </div>
             <div className="mb-4">

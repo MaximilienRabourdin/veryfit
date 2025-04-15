@@ -16,7 +16,10 @@ const RequestDeletionForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     axios
-      .post("http://localhost:5000/api/deletion-requests", formData)
+      .post(
+        "http://veryfit-production.up.railway.app/api/deletion-requests",
+        formData
+      )
       .then((response) => setMessage("Demande envoyée avec succès !"))
       .catch((error) => setMessage("Erreur lors de l'envoi de la demande."));
   };

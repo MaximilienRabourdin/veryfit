@@ -104,7 +104,7 @@ const FitCreateOrder = () => {
       );
 
       const response = await fetch(
-        "http://localhost:5000/api/dossiers/create",
+        "http://veryfit-production.up.railway.app/api/dossiers/create",
         {
           method: "POST",
           headers: {

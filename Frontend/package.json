@@ -2,7 +2,7 @@
   "name": "fit-doors-webapp",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:5000",
+  "proxy": "http://veryfit-production.up.railway.app",
   "dependencies": {
     "@supabase/supabase-js": "^2.46.1",
     "@testing-library/jest-dom": "^5.17.0",
@@ -52,8 +52,9 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
+    "esm": "^3.2.25",
     "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.13",
-    "replace-in-file": "^8.3.0"
+    "replace-in-file": "^8.3.0",
+    "tailwindcss": "^3.4.13"
   }
 }

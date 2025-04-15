@@ -8,7 +8,7 @@ const LogsTable = () => {
   useEffect(() => {
     // Récupère les logs depuis l'API
     axios
-      .get("http://localhost:5000/api/logs")
+      .get("http://veryfit-production.up.railway.app/api/logs")
       .then((response) => setLogs(response.data))
       .catch((err) => setError("Erreur lors de la récupération des logs."));
   }, []);
@@ -30,10 +30,18 @@ const LogsTable = () => {
         <tbody>
           {logs.map((log) => (
             <tr key={log.id}>
-              <td className="border border-gray-300 px-4 py-2">{log.user_id}</td>
-              <td className="border border-gray-300 px-4 py-2">{log.action_type}</td>
-              <td className="border border-gray-300 px-4 py-2">{log.target_id}</td>
-              <td className="border border-gray-300 px-4 py-2">{log.target_type}</td>
+              <td className="border border-gray-300 px-4 py-2">
+                {log.user_id}
+              </td>
+              <td className="border border-gray-300 px-4 py-2">
+                {log.action_type}
+              </td>
+              <td className="border border-gray-300 px-4 py-2">
+                {log.target_id}
+              </td>
+              <td className="border border-gray-300 px-4 py-2">
+                {log.target_type}
+              </td>
               <td className="border border-gray-300 px-4 py-2">
                 {new Date(log.timestamp).toLocaleString()}
               </td>
