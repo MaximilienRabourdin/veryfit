@@ -1,0 +1,133 @@
+.
+├── Backend
+│   ├── Clients.csv
+│   ├── Gamme_machine.csv
+│   ├── api
+│   │   ├── setCustomClaims.js
+│   │   └── uploadService.js
+│   ├── checkClaims.js
+│   ├── config
+│   │   ├── firebase-service-key.json
+│   │   ├── firebaseAdmin.js
+│   │   ├── google-service-key.json
+│   │   └── googleDrive.js
+│   ├── controllers
+│   │   ├── authController.js
+│   │   ├── clientController.js
+│   │   ├── commandController.js
+│   │   ├── deletionRequestController.js
+│   │   ├── documentController.js
+│   │   ├── dossierController.js
+│   │   ├── logController.js
+│   │   ├── ordersController.js
+│   │   ├── productController.js
+│   │   ├── resellerControler.js
+│   │   ├── statsController.js
+│   │   ├── testController.js
+│   │   ├── userController.js
+│   │   └── warrantyControllers.js
+│   ├── importCSVtoFirestore.js
+│   ├── importData.js
+│   ├── importProducts.js
+│   ├── importRevendeur.js
+│   ├── middlewares
+│   │   ├── authMiddleware.js
+│   │   ├── checkClaims.js
+│   │   ├── checkRole.js
+│   │   ├── roleMiddleware.js
+│   │   └── verifyToken.js
+│   ├── models
+│   │   ├── dossierModel.js
+│   │   ├── dossiers.js
+│   │   └── user.js
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── routes
+│   │   ├── auth.js
+│   │   ├── clients.js
+│   │   ├── commandRoutes.js
+│   │   ├── customClaimsRoutes.js
+│   │   ├── deletionRequests.js
+│   │   ├── documentRoutes.js
+│   │   ├── dossiers.js
+│   │   ├── events.js
+│   │   ├── forms.js
+│   │   ├── formulaires.js
+│   │   ├── logs.js
+│   │   ├── notifications.js
+│   │   ├── orders.js
+│   │   ├── products.js
+│   │   ├── protected.js
+│   │   ├── register.js
+│   │   ├── resellers.js
+│   │   ├── sessions.js
+│   │   ├── stats.js
+│   │   ├── test.js
+│   │   ├── uploadRoutes.js
+│   │   ├── userRoutes.js
+│   │   └── warranties.js
+│   ├── scripts
+│   │   ├── addProductTypes.js
+│   │   ├── checkClaims.js
+│   │   ├── checkUserRoles.js
+│   │   ├── exportProducts.js
+│   │   ├── getToken.js
+│   │   ├── importRevendeurs.js
+│   │   ├── migrateAuthUsersToFirestore.js
+│   │   ├── migrateRevendeursToUsers.js
+│   │   ├── seedDynamicForms.js
+│   │   ├── seedFirestore.js
+│   │   ├── seedFormTemplates.js
+│   │   ├── setCustomClaims.js
+│   │   ├── setPassword.js
+│   │   ├── setRolepersonnal.js
+│   │   └── setUserRole.js
+│   ├── server.js
+│   ├── services
+│   │   ├── googleDriveService.js
+│   │   └── uploadService.js
+│   ├── setClaims.js
+│   └── utils
+│       ├── FitNotifications.js
+│       ├── email.js
+│       ├── googleDrive.js
+│       ├── logService.js
+│       └── signature.js
+├── Frontend
+│   ├── README.md
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   ├── favicon.ico
+│   │   ├── index.html
+│   │   ├── logo192.png
+│   │   ├── logo512.png
+│   │   ├── manifest.json
+│   │   └── robots.txt
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.js
+│   │   ├── App.test.js
+│   │   ├── components
+│   │   ├── dataconnect
+│   │   ├── firebase.json
+│   │   ├── firebaseConfig.js
+│   │   ├── index.css
+│   │   ├── index.js
+│   │   ├── layouts
+│   │   ├── logo.svg
+│   │   ├── medias
+│   │   ├── pages
+│   │   ├── reportWebVitals.js
+│   │   ├── services
+│   │   └── setupTests.js
+│   └── tailwind.config.js
+├── arbo.txt
+├── arborescence.txt
+├── data
+│   ├── products.json
+│   └── revendeur.json
+├── package-lock.json
+└── package.json
+
+21 directories, 110 files
