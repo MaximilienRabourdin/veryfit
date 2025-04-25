@@ -50,7 +50,7 @@ app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route non trouvée" });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000; 
 
 app.listen(PORT, () => {
   console.log(`✅ Serveur lancé sur le port ${PORT}`);

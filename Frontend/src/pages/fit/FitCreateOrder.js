@@ -104,7 +104,7 @@ const FitCreateOrder = () => {
       );
 
       const response = await fetch(
-        "https://veryfit-production.up.railway.app",
+        "https://veryfit-production.up.railway.app/api/dossiers/create",
         {
           method: "POST",
           headers: {
@@ -113,6 +113,7 @@ const FitCreateOrder = () => {
           body: formDataToSend,
         }
       );
+      
 
       if (!response.ok) throw new Error("Erreur création dossier");
 
