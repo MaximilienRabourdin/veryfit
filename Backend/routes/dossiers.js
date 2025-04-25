@@ -55,7 +55,7 @@ router.post("/create", upload.single("file"), async (req, res) => {
 
     return res.status(201).json({ success: true, dossierId: dossierData.id });
   } catch (error) {
-    
+    console.log(error); // 👈 AJOUTE CETTE LIGNE pour voir l'erreur précise côté backend
     return res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 });
