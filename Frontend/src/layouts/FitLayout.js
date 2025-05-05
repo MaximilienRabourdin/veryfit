@@ -23,7 +23,7 @@ const FitLayout = () => {
         </div>
 
         {/* Décalage du contenu pour mobile */}
-        <div className="pt-16">
+        <div className="pt-2">
           <Outlet />
         </div>
       </div>

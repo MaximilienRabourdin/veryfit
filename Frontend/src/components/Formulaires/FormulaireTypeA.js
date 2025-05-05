@@ -7,8 +7,12 @@ import {
   updateDoc,
   getDoc,
   setDoc,
+  collection,
+  addDoc,
+  serverTimestamp
 } from "firebase/firestore";
 import { app } from "../../firebaseConfig";
+
 
 const FormulaireTypeA = ({ produit, orderId, index, onNext }) => {
   const db = getFirestore(app);
@@ -117,6 +121,27 @@ const FormulaireTypeA = ({ produit, orderId, index, onNext }) => {
       };
 
       await updateDoc(orderRef, updatedDossier);
+
+      await addDoc(collection(db, "notifications"), {
+        message: `📄 Formulaire rempli pour le produit "${produit.name}" dans le dossier "${orderId}".`,
+        createdAt: serverTimestamp(),
+        type: "formulaire",
+        orderId: orderId,
+        produitId: produit.productId,
+      });
+
+      await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "formulaire_rempli",
+          dossierId: orderId,
+          produitId: produit.productId,
+          produitName: produit.name,
+          destinataireType: dossier.destinataire_type,
+        }),
+      });
+      
 
       // Si tous les produits sont remplis, on transfère le dossier vers la collection "orders"
       if (allFilled) {

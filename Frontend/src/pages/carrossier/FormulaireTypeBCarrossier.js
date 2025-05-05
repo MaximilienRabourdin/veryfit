@@ -88,6 +88,19 @@ const FormulaireTypeB = ({ produit, orderId, index, onNext }) => {
 
       await updateDoc(orderRef, { produits });
 
+      await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "formulaire_rempli",
+          dossierId: orderId,
+          produitId: produit.productId,
+          produitName: produit.name,
+          destinataireType: dossier.destinataire_type,
+        }),
+      });
+      
+
       const allFilled = produits.every((p) => p.filled);
       if (allFilled) {
         await updateDoc(orderRef, { status: "validé" });

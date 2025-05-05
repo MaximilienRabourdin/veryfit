@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { sendOrderNotificationEmail } = require("../utils/FitNotifications");
-const { sendDeclarationNotification } = require("../controllers/notificationController");
+const { sendNotification } = require("../controllers/notificationsController");
 
 router.post("/sendNotification", async (req, res) => {
   const { email, orderDetails } = req.body;
@@ -15,7 +15,7 @@ router.post("/sendNotification", async (req, res) => {
   }
 });
 
-router.post("/send-declaration-notification", sendDeclarationNotification);
+router.post("/send", sendNotification);
 
 
 module.exports = router;

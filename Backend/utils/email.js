@@ -1,62 +1,87 @@
-const nodemailer = require('nodemailer');
-require("dotenv").config();
-
+const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.EMAIL_HOST,
+  port: parseInt(process.env.EMAIL_PORT),
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+    pass: process.env.EMAIL_PASS,
+  },
 });
 
-const sendEmailToDestinataire = async ({ to, dossierId, orderName, deliveryDate, produits }) => {
-  const dashboardUrl = `http://localhost:3000/`; // ou directement l'URL du dashboard revendeur
+const sendEmailToDestinataire = async ({ to, dossierId, orderName, deliveryDate, produits, fichiers }) => {
+  try {
+    const produitList = produits
+      .map((prod) => `• ${prod.name} (x${prod.quantity})`)
+      .join("<br>");
 
-  const produitsHTML = produits && produits.length > 0
-    ? `<ul>${produits.map(p => `<li>${p.name} — Quantité : ${p.quantity}</li>`).join("")}</ul>`
-    : "<p>Aucun produit renseigné.</p>";
+    let attachments = [];
+    let fichierListHTML = "";
 
-  await transporter.sendMail({
-    from: "no-reply@fitdoors.com",
-    to,
-    subject: `📄 Nouveau dossier CE à compléter - ${orderName}`,
-    html: `
-      <h2>Bonjour,</h2>
-      <p>Vous avez reçu un nouveau dossier CE à compléter.</p>
-      <ul>
-        <li><strong>Nom du dossier :</strong> ${orderName}</li>
-        <li><strong>Date de livraison :</strong> ${deliveryDate}</li>
-      </ul>
+    if (fichiers && typeof fichiers === "object") {
+      Object.entries(fichiers).forEach(([key, file]) => {
+        attachments.push({
+          filename: file.name,
+          content: file.buffer,
+          contentType: file.mimetype,
+        });
 
-      <h3>📦 Produits concernés :</h3>
-      ${produitsHTML}
+        fichierListHTML += `• ${file.name}<br>`;
+      });
+    }
 
-      <p>
-        👉 <a href="${dashboardUrl}">Cliquez ici pour accéder à votre espace personnel</a>
-      </p>
+    await transporter.sendMail({
+      from: `"VERYFIT" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: `[VERYFIT] Nouveau dossier CE à compléter - ${orderName}`,
+      html: `
+        <p>Bonjour,</p>
+        <p>Vous avez un nouveau dossier CE à compléter :</p>
+        <ul>
+          <li><strong>Numéro du dossier :</strong> ${orderName}</li>
+          <li><strong>Date de livraison prévue :</strong> ${deliveryDate}</li>
+        </ul>
 
-      <p>Une fois connecté, vous pourrez remplir le formulaire lié à ce dossier, le signer et l’envoyer automatiquement à FIT.</p>
+        <p><strong>Produits concernés :</strong></p>
+        <p>${produitList}</p>
 
-      <br />
-      <p>L’équipe FIT DOORS</p>
-    `
-  });
+        ${fichierListHTML
+          ? `<p><strong>Fichiers joints :</strong><br>${fichierListHTML}</p>`
+          : ""}
+
+        <p>Merci de vous connecter à votre espace pour compléter le formulaire :</p>
+        <p><a href="https://veryfit.vercel.app/login" target="_blank">Se connecter à la plateforme</a></p>
+
+        <p>Bonne journée,</p>
+        <p>L'équipe FIT Doors</p>
+      `,
+      attachments,
+    });
+
+    console.log(`📧 Email envoyé à ${to} avec ${attachments.length} pièce(s) jointe(s)`);
+  } catch (error) {
+    console.error("Erreur envoi email destinataire :", error);
+  }
 };
+
 
 const sendEmailToFit = async ({ subject, html }) => {
   try {
     await transporter.sendMail({
-      from: `"FIT DOORS" <${process.env.GMAIL_USER}>`,
-      to: "fitdoors.app@gmail.com",
+      from: `"FIT Doors" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
       subject,
       html,
     });
-    
+
+    console.log(`📧 Notification email envoyée à FIT`);
   } catch (error) {
-    
+    console.error("Erreur envoi email FIT :", error);
   }
 };
 
-
-module.exports = { sendEmailToDestinataire, sendEmailToFit };
+module.exports = {
+  sendEmailToDestinataire,
+  sendEmailToFit,
+};

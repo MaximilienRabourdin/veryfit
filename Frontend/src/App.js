@@ -146,10 +146,13 @@ function App() {
               path="orders/:orderId/step/:stepIndex"
               element={<EtapeFormulaireCECarrossier />}
             />
-            <Route
-              path="orders/:orderId/declaration-montage"
-              element={<DeclarationMontageCarrossier />}
-            />
+          
+
+<Route
+  path="orders/:orderId/produits/:produitId/declaration-montage"
+  element={<DeclarationMontageCarrossier />}
+/>
+
             <Route
               path="declaration-ce/:orderId"
               element={<DeclarationCECarrossier />}

@@ -5,6 +5,9 @@ import {
   updateDoc,
   getDoc,
   setDoc,
+  addDoc,
+  collection,
+  serverTimestamp,
 } from "firebase/firestore";
 import { app } from "../../firebaseConfig";
 
@@ -101,6 +104,29 @@ const FormulaireTypeA = ({ produit, orderId, index, onNext }) => {
 
       await updateDoc(orderRef, updatedDossier);
 
+      // ✅ Créer une notification dans Firestore
+      await addDoc(collection(db, "notifications"), {
+        message: `📄 Formulaire rempli pour le produit "${produit.name}" dans le dossier "${dossier.orderName}".`,
+        createdAt: serverTimestamp(),
+        type: "formulaire",
+        orderId,
+        produitId: produit.productId,
+        destinataire: dossier.destinataire_type || "Revendeur",
+      });
+
+      // ✅ Envoi facultatif au backend
+      await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "formulaire_rempli",
+          dossierId: orderId,
+          produitId: produit.productId,
+          produitName: produit.name,
+          destinataireType: dossier.destinataire_type,
+        }),
+      });
+
       if (allFilled) {
         const newOrder = {
           ...updatedDossier,
@@ -112,10 +138,10 @@ const FormulaireTypeA = ({ produit, orderId, index, onNext }) => {
         await setDoc(doc(db, "orders", orderId), newOrder);
         console.log("✅ Dossier transféré à FIT dashboard.");
       }
-      // 👇 AJOUTE CES 2 LIGNES
-await fetch(`/api/dossiers/generate/declaration-ce/${orderId}/${produit.productId}`);
-await fetch(`/api/dossiers/generate/declaration-montage/${orderId}/${produit.productId}`);
 
+      // ✅ Génération des documents PDF
+      await fetch(`/api/dossiers/generate/declaration-ce/${orderId}/${produit.productId}`);
+      await fetch(`/api/dossiers/generate/declaration-montage/${orderId}/${produit.productId}`);
 
       alert("✅ Formulaire Type A enregistré !");
       onNext();

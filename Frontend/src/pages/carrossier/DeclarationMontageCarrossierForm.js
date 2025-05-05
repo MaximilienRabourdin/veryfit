@@ -1,213 +1,202 @@
 // pages/carrossier/DeclarationMontageCarrossier.js
 import React, { useRef, useState, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  collection,
+  addDoc,
+} from "firebase/firestore";
 import { useParams } from "react-router-dom";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import templatePdf from "../../medias/declaration_montage_template.pdf"; // même fichier que Revendeur
+import { db } from "../../firebaseConfig";
 
-const DeclarationMontageCarrossier = () => {
-  const { orderId } = useParams();
-  const [formData, setFormData] = useState({
-    entreprise: "",
-    responsableNom: "",
-    responsableFonction: "",
-    remarques: "",
-    date: new Date().toISOString().split("T")[0],
+const API_BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://veryfit-production.up.railway.app";
+
+const DeclarationMontageCarrossierForm = () => {
+  const { orderId, produitId } = useParams();
+  const [form, setForm] = useState({
+    nomCarrossier: "",
+    dateMontage: "",
+    numeroSerie: "",
+    observations: "",
   });
-  const sigCanvas = useRef(null);
-  const [loading, setLoading] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState(null);
-  const [userId, setUserId] = useState(null);
+  const [produit, setProduit] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+  const sigCanvasRef = useRef(null);
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) setUserId(storedUserId);
-  }, []);
+    const fetchData = async () => {
+      const dossierRef = doc(db, "dossiers", orderId);
+      const snap = await getDoc(dossierRef);
+      if (!snap.exists()) return;
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const clearSignature = () => {
-    sigCanvas.current.clear();
-  };
-
-  const generateSignedPDF = async (formData, signatureImage) => {
-    const existingPdfBytes = await fetch(templatePdf).then((res) =>
-      res.arrayBuffer()
-    );
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    const page = pdfDoc.getPages()[0];
-    const { width, height } = page.getSize();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const signatureImageBytes = await fetch(signatureImage).then((res) =>
-      res.arrayBuffer()
-    );
-    const signatureImageEmbed = await pdfDoc.embedPng(signatureImageBytes);
-
-    page.drawText(formData.entreprise || "", {
-      x: 60,
-      y: height - 150,
-      size: 12,
-      font,
-    });
-    page.drawText(
-      `${formData.responsableNom || ""} - ${
-        formData.responsableFonction || ""
-      }`,
-      {
-        x: 310,
-        y: height - 150,
-        size: 12,
-        font,
-      }
-    );
-    page.drawText(formData.remarques || "", {
-      x: 60,
-      y: height - 290,
-      size: 11,
-      font,
-      maxWidth: 460,
-      lineHeight: 14,
-    });
-    page.drawText(formData.date || "", {
-      x: 60,
-      y: height - 340,
-      size: 12,
-      font,
-    });
-    page.drawImage(signatureImageEmbed, {
-      x: 320,
-      y: height - 390,
-      width: 200,
-      height: 80,
-    });
-
-    const pdfBytes = await pdfDoc.save();
-    return new Blob([pdfBytes], { type: "application/pdf" });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const signatureImage = sigCanvas.current
-        .getTrimmedCanvas()
-        .toDataURL("image/png");
-      const pdfFile = await generateSignedPDF(formData, signatureImage);
-      if (!pdfFile) return;
-
-      const fileToSend = new File([pdfFile], "declaration_montage.pdf", {
-        type: "application/pdf",
-      });
-      const formDataToSend = new FormData();
-      formDataToSend.append("file", fileToSend);
-      formDataToSend.append("orderId", orderId);
-
-      const response = await fetch(
-        "http://veryfit-production.up.railway.app/upload/declaration-montage",
-        {
-          method: "POST",
-          body: formDataToSend,
+      const dossier = snap.data();
+      const prod = dossier.produits.find((p) => p.uuid === produitId);
+      if (prod) {
+        setProduit(prod);
+        if (prod.declarationMontageData) {
+          setForm(prod.declarationMontageData);
+          setSubmitted(true);
         }
+      }
+    };
+    fetchData();
+  }, [orderId, produitId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleClear = () => {
+    sigCanvasRef.current.clear();
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const signatureData = sigCanvasRef.current
+        ? sigCanvasRef.current.getTrimmedCanvas().toDataURL("image/png")
+        : null;
+
+      const fullForm = {
+        ...form,
+        signature: signatureData,
+      };
+
+      // 🔁 Mise à jour du bon produit avec uuid
+      const dossierRef = doc(db, "dossiers", orderId);
+      const snap = await getDoc(dossierRef);
+      const dossier = snap.data();
+
+      const produitsMaj = dossier.produits.map((p) =>
+        p.uuid === produitId
+          ? {
+              ...p,
+              declarationMontageData: fullForm,
+              documents: {
+                ...p.documents,
+                declarationMontage: {
+                  status: "complété",
+                  url: "", // mis à jour ensuite par le backend
+                },
+              },
+            }
+          : p
       );
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Erreur serveur");
+      await updateDoc(dossierRef, { produits: produitsMaj });
 
-      setPdfUrl(data.fileUrl);
-      alert("✅ Déclaration envoyée !");
-    } catch (err) {
-      console.error("❌ Erreur :", err);
-      alert(err.message);
-    } finally {
-      setLoading(false);
+      // 🔁 Appel backend pour générer le PDF
+      console.log("URL DECLARATION : ", `${API_BASE_URL}/generate/declaration-montage/${orderId}/${produit.uuid}`);
+
+      const response = await fetch(
+        `${API_BASE_URL}/generate/declaration-montage/${orderId}/${produit.uuid}`,
+        { method: "GET" }
+      );
+
+      if (!response.ok) throw new Error("Erreur génération PDF");
+
+      // 🔁 Ajout notification Firestore
+      await addDoc(collection(getFirestore(), "notifications"), {
+        type: "declarationMontage_produit",
+        dossierId: orderId,
+        produitId,
+        message: `🧾 Déclaration de montage remplie pour le produit ${produit?.name || ""}`,
+        read: false,
+        createdAt: new Date(),
+      });
+
+      setSubmitted(true);
+      alert("✅ Déclaration enregistrée et envoyée à FIT !");
+    } catch (error) {
+      console.error("Erreur enregistrement :", error);
+      alert("❌ Une erreur est survenue lors de l'enregistrement.");
     }
   };
 
+  if (submitted)
+    return (
+      <div className="p-6 bg-white shadow rounded max-w-2xl mx-auto">
+        <h2 className="text-xl font-bold text-green-600 mb-4">
+          ✅ Déclaration de montage enregistrée
+        </h2>
+        <p className="mb-4 text-gray-700">Merci pour votre envoi.</p>
+      </div>
+    );
+
   return (
-    <div className="max-w-5xl mx-auto bg-white p-6 shadow rounded">
-      <h1 className="text-2xl font-bold text-darkBlue mb-4">
-        Déclaration de montage (Carrossier)
-      </h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="p-6 bg-white shadow rounded max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold text-blue-700 mb-6">
+        🧾 Déclaration de montage
+      </h2>
+
+      <div className="space-y-4">
         <input
+          name="nomCarrossier"
           type="text"
-          name="entreprise"
-          value={formData.entreprise}
-          onChange={handleInputChange}
-          placeholder="Entreprise"
+          placeholder="Nom du carrossier"
+          value={form.nomCarrossier}
+          onChange={handleChange}
           className="w-full border p-2 rounded"
         />
         <input
-          type="text"
-          name="responsableNom"
-          value={formData.responsableNom}
-          onChange={handleInputChange}
-          placeholder="Nom du responsable"
+          name="dateMontage"
+          type="date"
+          value={form.dateMontage}
+          onChange={handleChange}
           className="w-full border p-2 rounded"
         />
         <input
+          name="numeroSerie"
           type="text"
-          name="responsableFonction"
-          value={formData.responsableFonction}
-          onChange={handleInputChange}
-          placeholder="Fonction"
+          placeholder="Numéro de série"
+          value={form.numeroSerie}
+          onChange={handleChange}
           className="w-full border p-2 rounded"
         />
         <textarea
-          name="remarques"
-          value={formData.remarques}
-          onChange={handleInputChange}
-          placeholder="Remarques"
+          name="observations"
+          placeholder="Observations (facultatif)"
+          value={form.observations}
+          onChange={handleChange}
           className="w-full border p-2 rounded"
-        />
-        <input
-          type="date"
-          name="date"
-          value={formData.date}
-          onChange={handleInputChange}
-          className="w-full border p-2 rounded"
-        />
-        <SignatureCanvas
-          ref={sigCanvas}
-          penColor="black"
-          canvasProps={{
-            width: 600,
-            height: 150,
-            className: "border border-gray-300 rounded w-full",
-          }}
-        />
-        <button
-          type="button"
-          onClick={clearSignature}
-          className="text-red-600 mt-2"
-        >
-          Effacer la signature
-        </button>
-        <button
-          type="submit"
-          className="bg-green-600 text-white px-6 py-2 rounded"
-          disabled={loading}
-        >
-          {loading ? "Envoi en cours..." : "Valider et envoyer"}
-        </button>
-        {pdfUrl && (
-          <div className="mt-4">
-            <a
-              href={pdfUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-blue-600 underline"
-            >
-              Voir la déclaration générée
-            </a>
+        ></textarea>
+
+        <div>
+          <p className="font-medium mb-2">Signature du carrossier :</p>
+          <div className="border border-gray-300 p-2 rounded bg-white">
+            <SignatureCanvas
+              ref={sigCanvasRef}
+              penColor="black"
+              canvasProps={{
+                width: 500,
+                height: 200,
+                className: "sigCanvas w-full h-52",
+              }}
+            />
           </div>
-        )}
-      </form>
+          <button
+            onClick={handleClear}
+            className="mt-2 text-sm text-red-500 hover:underline"
+          >
+            Effacer la signature
+          </button>
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 mt-4"
+        >
+          ✅ Enregistrer la déclaration
+        </button>
+      </div>
     </div>
   );
 };
 
-export default DeclarationMontageCarrossier;
+export default DeclarationMontageCarrossierForm;

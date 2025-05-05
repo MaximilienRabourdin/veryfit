@@ -17,7 +17,7 @@ const FitCreateOrder = () => {
   const [serviceDate, setServiceDate] = useState("");
   const [clientAffaireNumber, setClientAffaireNumber] = useState("");
   const [clientOrderNumber, setClientOrderNumber] = useState("");
-  const [conformiteFile, setConformiteFile] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const FitCreateOrder = () => {
         const q = query(
           collection(db, "users_webapp"),
           where("role", "==", "Carrossier"),
-          where("isApproved", "==", true) // 👈 On s’assure que seuls les comptes validés s'affichent
+          where("isApproved", "==", true)
         );
         const snapshot = await getDocs(q);
         const list = snapshot.docs.map((doc) => {
@@ -63,57 +63,63 @@ const FitCreateOrder = () => {
     e.preventDefault();
     if (!validateFields()) return;
 
+    setLoading(true);
+    const dossierId = uuidv4();
+
     try {
-      const destinataire = [...revendeurs, ...carrossiers].find(
-        (r) => r.id === selectedRevendeur
-      );
+      const destinataire = [...revendeurs, ...carrossiers].find((r) => r.id === selectedRevendeur);
       const destinataireEmail = destinataire?.email || "";
 
       const produitsAvecInfos = selectedProducts.map((prod) => {
         const produitComplet = products.find((p) => p.id === prod.productId);
+        const productId = produitComplet?.id || "";
+        const productName = produitComplet?.name || "";
+      
         return {
+          uuid: uuidv4(), // ✅ identifiant unique pour chaque produit
           ...prod,
-          name: produitComplet?.name || "",
+          productId,
+          name: productName,
           typeFormulaire:
-            produitComplet?.name === "FIT Clever SAFE Husky"
+            productName.trim().toUpperCase() === "FIT CLEVER SAFE HUSKY"
               ? "typeB"
               : "typeA",
           filled: false,
           formulaireData: null,
+          documentsChoisis: prod.documentsChoisis,
         };
       });
 
       const formDataToSend = new FormData();
-      formDataToSend.append("file", conformiteFile);
-      formDataToSend.append(
-        "data",
-        JSON.stringify({
-          id: uuidv4(),
-          orderName,
-          revendeur: selectedRevendeur,
-          revendeurEmail: destinataireEmail,
-          destinataire_type: destinataire?.role || "Revendeur",
-          produits: produitsAvecInfos,
-          deliveryDate,
-          serviceDate,
-          clientAffaireNumber,
-          clientOrderNumber,
-          status: "en_attente_remplissage",
-          createdAt: new Date().toISOString(),
-        })
-      );
-
-      const response = await fetch(
-        "https://veryfit-production.up.railway.app/api/dossiers/create",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: formDataToSend,
+      selectedProducts.forEach((prod, index) => {
+        if (prod.file) {
+          formDataToSend.append(`file_produit_${index}`, prod.file);
         }
-      );
-      
+      });
+
+      const payload = {
+        id: dossierId,
+        orderName,
+        revendeur: selectedRevendeur,
+        revendeurEmail: destinataireEmail,
+        destinataire_type: destinataire?.role || "Revendeur",
+        produits: produitsAvecInfos,
+        deliveryDate,
+        serviceDate,
+        clientAffaireNumber,
+        clientOrderNumber,
+        status: "en_attente_remplissage",
+        createdAt: new Date().toISOString(),
+      };
+
+      formDataToSend.append("data", JSON.stringify(payload));
+
+      console.log("📦 Envoi du dossier :", payload);
+
+      const response = await fetch("http://localhost:5000/api/dossiers/create", {
+        method: "POST",
+        body: formDataToSend,
+      });
 
       if (!response.ok) throw new Error("Erreur création dossier");
 
@@ -122,6 +128,8 @@ const FitCreateOrder = () => {
     } catch (error) {
       console.error("🚨 Erreur création dossier CE :", error);
       alert("Erreur création du dossier.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,7 +138,6 @@ const FitCreateOrder = () => {
     if (!selectedRevendeur) return alert("Sélectionnez un destinataire.");
     if (!selectedProducts.length) return alert("Ajoutez un produit.");
     if (!deliveryDate) return alert("Date de livraison manquante.");
-    if (!conformiteFile) return alert("Ajoutez le PDF de conformité.");
     return true;
   };
 
@@ -142,18 +149,80 @@ const FitCreateOrder = () => {
     setServiceDate("");
     setClientAffaireNumber("");
     setClientOrderNumber("");
-    setConformiteFile(null);
   };
 
   const addProduct = () => {
-    setSelectedProducts([...selectedProducts, { productId: "", quantity: 1 }]);
+    setSelectedProducts([
+      ...selectedProducts,
+      {
+        productId: "",
+        quantity: 1,
+        file: null,
+        documentsChoisis: {
+          declarationCE: true,
+          declarationMontage: true,
+          controlePeriodique: true,
+          noticeInstruction: true,
+        },
+      },
+    ]);
   };
 
   const updateProduct = (index, key, value) => {
     const updated = [...selectedProducts];
-    updated[index][key] = value;
+    if (key === "file") {
+      updated[index].file = value.target.files[0];
+    } else if (key.startsWith("documentsChoisis.")) {
+      const docKey = key.split(".")[1];
+      updated[index].documentsChoisis[docKey] = value;
+    } else {
+      updated[index][key] = value;
+    }
     setSelectedProducts(updated);
   };
+
+  const productsByCategory = {
+    "VAT RETROFIT": [],
+    "CLEVER RETROFIT": [],
+    "CLEVER SAFE": [],
+  };
+
+  const vatRetrofitProducts = [
+    "FIT VAT BOIS",
+    "FIT VAT CC",
+    "FIT VAT FORTY",
+    "FIT VAT RR",
+    "FIT VAT HUSKY",
+  ];
+
+  const cleverRetrofitProducts = [
+    "FIT CLEVER BOIS",
+    "FIT CLEVER CC",
+    "FIT CLEVER FORTY",
+    "FIT CLEVER RR",
+    "FIT CLEVER HUSKY",
+  ];
+
+  const cleverSafeProducts = [
+    "FIT CLEVER SAFE BOIS",
+    "FIT CLEVER SAFE CC",
+    "FIT CLEVER SAFE FORTY",
+    "FIT CLEVER SAFE RR",
+    "FIT CLEVER SAFE HUSKY",
+  ];
+
+  products.forEach((product) => {
+    const name = (product.name || "").trim().toUpperCase();
+    const categorie = (product.categorie || "").trim().toUpperCase();
+
+    if (vatRetrofitProducts.includes(name) || categorie === "VAT RETROFIT") {
+      productsByCategory["VAT RETROFIT"].push(product);
+    } else if (cleverRetrofitProducts.includes(name) || categorie === "CLEVER RETROFIT") {
+      productsByCategory["CLEVER RETROFIT"].push(product);
+    } else if (cleverSafeProducts.includes(name) || categorie === "CLEVER SAFE" || categorie === "SAFE") {
+      productsByCategory["CLEVER SAFE"].push(product);
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -163,139 +232,65 @@ const FitCreateOrder = () => {
 
       <form
         onSubmit={handleCreateOrder}
+        encType="multipart/form-data"
         className="bg-white shadow-lg rounded-lg p-8 max-w-5xl mx-auto space-y-8"
       >
         <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Numéro du dossier"
-            value={orderName}
-            onChange={(e) => setOrderName(e.target.value)}
-            className="p-3 border rounded"
-          />
-          <input
-            type="text"
-            placeholder="Numéro d'affaire client"
-            value={clientAffaireNumber}
-            onChange={(e) => setClientAffaireNumber(e.target.value)}
-            className="p-3 border rounded"
-          />
-          <input
-            type="text"
-            placeholder="Numéro de commande client"
-            value={clientOrderNumber}
-            onChange={(e) => setClientOrderNumber(e.target.value)}
-            className="p-3 border rounded"
-          />
-
-          <select
-            value={selectedRevendeur}
-            onChange={(e) => setSelectedRevendeur(e.target.value)}
-            className="p-3 border rounded"
-          >
+          <input type="text" placeholder="Numéro du dossier" value={orderName} onChange={(e) => setOrderName(e.target.value)} className="p-3 border rounded" />
+          <input type="text" placeholder="Numéro d'affaire client" value={clientAffaireNumber} onChange={(e) => setClientAffaireNumber(e.target.value)} className="p-3 border rounded" />
+          <input type="text" placeholder="Numéro de commande client" value={clientOrderNumber} onChange={(e) => setClientOrderNumber(e.target.value)} className="p-3 border rounded" />
+          <select value={selectedRevendeur} onChange={(e) => setSelectedRevendeur(e.target.value)} className="p-3 border rounded">
             <option value="">-- Choisir le destinataire --</option>
             <optgroup label="Revendeurs">
-              {revendeurs.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.company}
-                </option>
-              ))}
+              {revendeurs.map((r) => (<option key={r.id} value={r.id}>{r.company}</option>))}
             </optgroup>
             <optgroup label="Carrossiers">
-              {carrossiers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.company}
-                </option>
-              ))}
+              {carrossiers.map((c) => (<option key={c.id} value={c.id}>{c.company}</option>))}
             </optgroup>
           </select>
-
-          <input
-            type="date"
-            value={deliveryDate}
-            onChange={(e) => setDeliveryDate(e.target.value)}
-            className="p-3 border rounded"
-          />
-          <input
-            type="date"
-            value={serviceDate}
-            disabled
-            className="p-3 border rounded bg-gray-100"
-          />
+          <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="p-3 border rounded" />
+          <input type="date" value={serviceDate} disabled className="p-3 border rounded bg-gray-100" />
         </div>
 
-        {/* Produits */}
         <div>
           <h2 className="font-bold text-lg mb-2">PRODUITS</h2>
           {selectedProducts.map((product, index) => (
-            <div
-              key={index}
-              className="grid grid-cols-3 gap-4 items-center mb-2"
-            >
-              <select
-                value={product.productId}
-                onChange={(e) =>
-                  updateProduct(index, "productId", e.target.value)
-                }
-                className="p-3 border rounded"
-              >
+            <div key={index} className="border p-4 rounded mb-4 space-y-2">
+              <select value={product.productId} onChange={(e) => updateProduct(index, "productId", e.target.value)} className="p-3 border rounded w-full">
                 <option value="">-- Produit --</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
+                {Object.entries(productsByCategory).map(([category, produits]) => (
+                  <optgroup key={category} label={`📦 ${category}`}>
+                    {produits.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
-              <input
-                type="number"
-                min={1}
-                value={product.quantity}
-                onChange={(e) =>
-                  updateProduct(index, "quantity", parseInt(e.target.value))
-                }
-                className="p-3 border rounded"
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  setSelectedProducts(
-                    selectedProducts.filter((_, i) => i !== index)
-                  )
-                }
-                className="text-red-600 font-bold"
-              >
-                ✕
-              </button>
+              <input type="number" min={1} value={product.quantity} onChange={(e) => updateProduct(index, "quantity", parseInt(e.target.value))} className="p-3 border rounded w-full" />
+              <input type="file" accept="application/pdf" onChange={(e) => updateProduct(index, "file", e)} className="p-2 border rounded w-full" />
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {Object.entries(product.documentsChoisis).map(([key, val]) => (
+                  <label key={key} className="flex items-center gap-2">
+                    <input type="checkbox" checked={val} onChange={(e) => updateProduct(index, `documentsChoisis.${key}`, e.target.checked)} />
+                    {key.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase())}
+                  </label>
+                ))}
+              </div>
             </div>
           ))}
-          <button
-            type="button"
-            onClick={addProduct}
-            className="text-blue-600 font-bold mt-2"
-          >
+          <button type="button" onClick={addProduct} className="text-blue-600 font-bold mt-2">
             + Ajouter un produit
           </button>
         </div>
 
-        {/* Upload PDF */}
-        <div>
-          <h2 className="font-bold text-lg mb-2">Pièce jointe</h2>
-          <input
-            type="file"
-            accept="application/pdf"
-            onChange={(e) => setConformiteFile(e.target.files[0])}
-            className="p-2 border rounded"
-          />
-          {conformiteFile && (
-            <p className="text-green-600 mt-2">✅ {conformiteFile.name}</p>
-          )}
-        </div>
-
         <button
           type="submit"
-          className="px-6 py-3 bg-red-600 text-white rounded shadow hover:bg-red-700 transition"
+          disabled={loading}
+          className={`px-6 py-3 rounded shadow transition text-white ${
+            loading ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+          }`}
         >
-          VALIDER LE DOSSIER
+          {loading ? "Envoi en cours..." : "VALIDER LE DOSSIER"}
         </button>
       </form>
     </div>

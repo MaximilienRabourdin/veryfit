@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -35,6 +37,8 @@ app.use("/api/dossiers", dossierRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/declaration", declarationRoutes);
 app.use("/", uploadRoutes);
+app.use("/api/notifications", require("./routes/notifications"));
+
 
 // ✅ Dossier statique pour les PDFs
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

@@ -5,24 +5,37 @@ import {
   onSnapshot,
   query,
   orderBy,
+  doc,
+  deleteDoc,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { FaBell, FaSearch, FaClipboardCheck, FaFileSignature } from "react-icons/fa";
+import {
+  FaBell,
+  FaTrash,
+  FaSearch,
+  FaClipboardCheck,
+  FaFileSignature,
+} from "react-icons/fa";
 
 const FitDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [date, setDate] = useState(new Date());
+  const [searchTerm, setSearchTerm] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribeDossiers = onSnapshot(
       query(collection(db, "dossiers"), orderBy("createdAt", "desc")),
       (snapshot) => {
-        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setOrders(data);
       }
     );
@@ -30,8 +43,16 @@ const FitDashboard = () => {
     const unsubscribeNotifications = onSnapshot(
       collection(db, "notifications"),
       (snapshot) => {
-        const fetched = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setNotifications(fetched.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
+        const fetched = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setNotifications(
+          fetched.sort(
+            (a, b) =>
+              (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+          )
+        );
       }
     );
 
@@ -41,32 +62,55 @@ const FitDashboard = () => {
     };
   }, []);
 
+  const handleDeleteDossier = async (dossierId) => {
+    const confirm = window.confirm(
+      "❗️Êtes-vous sûr de vouloir supprimer ce dossier ?"
+    );
+    if (!confirm) return;
+
+    try {
+      await deleteDoc(doc(db, "dossiers", dossierId));
+      alert("✅ Dossier supprimé avec succès !");
+    } catch (error) {
+      console.error("Erreur suppression :", error);
+      alert("❌ Une erreur est survenue lors de la suppression.");
+    }
+  };
+
   const countDocumentsCompletes = (order) => {
     if (!order.produits || !Array.isArray(order.produits)) return 0;
 
     return order.produits.reduce((acc, produit) => {
       let count = 0;
-
       if (produit.formulaire || produit.formulaireData) count += 1;
-      if (produit.declarationMontage?.url) count += 1;
-      if (produit.declarationCE?.url) count += 1;
-
+      if (produit.documents?.declarationMontage?.url) count += 1;
+      if (produit.documents?.declarationCE?.url) count += 1;
       return acc + count;
     }, 0);
   };
 
   const countDocumentsTotal = (order) => {
     if (!order.produits || !Array.isArray(order.produits)) return 0;
-
-    return order.produits.length * 3; // formulaire + déclaration montage + déclaration CE
+    return order.produits.length * 3;
   };
 
+  const filteredOrders = orders.filter((order) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      order.orderName?.toLowerCase().includes(term) ||
+      order.revendeurEmail?.toLowerCase().includes(term)
+    );
+  });
+
   return (
-    <div className="p-6 bg-lightGray min-h-screen flex flex-col relative">
+    <div className="p-6 bg-lightGray min-h-screen flex flex-col relative font-sans">
       <header className="flex items-center justify-between mb-4">
         <h1 className="text-3xl font-bold text-darkBlue">Bienvenue</h1>
         <div className="relative">
-          <FaBell className="w-6 h-6 text-blue-600 cursor-pointer" onClick={() => setShowNotifications(!showNotifications)} />
+          <FaBell
+            className="w-6 h-6 text-blue-600 cursor-pointer"
+            onClick={() => setShowNotifications(!showNotifications)}
+          />
         </div>
       </header>
 
@@ -94,7 +138,8 @@ const FitDashboard = () => {
           <p className="font-semibold">Documents en attente</p>
           <p className="text-2xl text-yellow-500 font-bold">
             {orders.reduce(
-              (acc, o) => acc + (countDocumentsTotal(o) - countDocumentsCompletes(o)),
+              (acc, o) =>
+                acc + (countDocumentsTotal(o) - countDocumentsCompletes(o)),
               0
             )}
           </p>
@@ -103,39 +148,74 @@ const FitDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white shadow-md p-4 rounded mb-6 overflow-x-auto">
+          <div className="bg-white shadow-md p-4 rounded mb-6 overflow-hidden">
             <h2 className="text-xl font-bold mb-4">Derniers dossiers CE</h2>
-            <table className="w-full text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="p-2 text-left">Dossier</th>
-                  <th className="p-2 text-left">Destinataire</th>
-                  <th className="p-2 text-left">Type</th>
-                  <th className="p-2 text-left">Documents reçus</th>
-                  <th className="p-2 text-left">Voir</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order.id} className="border-t hover:bg-gray-100">
-                    <td className="p-2">{order.orderName}</td>
-                    <td className="p-2">{order.revendeurEmail || "—"}</td>
-                    <td className="p-2">{order.destinataire_type || "Revendeur"}</td>
-                    <td className="p-2">
-                      {countDocumentsCompletes(order)} / {countDocumentsTotal(order)}
-                    </td>
-                    <td className="p-2">
-                      <button
-                        onClick={() => navigate(`/fit/orders/${order.id}`)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <FaSearch />
-                      </button>
-                    </td>
+
+            <input
+              type="text"
+              placeholder="Rechercher un dossier ou un email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-4 w-full border p-2 rounded"
+            />
+
+            <div className="overflow-y-auto max-h-[400px]">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-gray-100 sticky top-0 z-10">
+                  <tr>
+                    <th className="p-3 text-left">Dossier</th>
+                    <th className="p-3 text-left">Destinataire</th>
+                    <th className="p-3 text-left">Type</th>
+                    <th className="p-3 text-left">Documents reçus</th>
+                    <th className="p-3 text-left">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredOrders.map((order) => (
+                    <tr
+                      key={order.id}
+                      className="border-b hover:bg-gray-50 transition"
+                    >
+                      <td className="p-3 truncate max-w-[180px]">
+                        {order.orderName}
+                      </td>
+                      <td className="p-3 truncate max-w-[220px]">
+                        {order.revendeurEmail || "—"}
+                      </td>
+                      <td className="p-3">
+                        {order.destinataire_type || "Revendeur"}
+                      </td>
+                      <td className="p-3">
+                        {countDocumentsCompletes(order)} /{" "}
+                        {countDocumentsTotal(order)}
+                      </td>
+                      <td className="p-3 flex items-center gap-3">
+                        <button
+                          onClick={() => navigate(`/fit/orders/${order.id}`)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Voir le dossier"
+                        >
+                          <FaSearch />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDossier(order.id)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Supprimer"
+                        >
+                          <FaTrash />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {filteredOrders.length === 0 && (
+                <p className="text-center py-4 text-gray-500">
+                  Aucun dossier trouvé.
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

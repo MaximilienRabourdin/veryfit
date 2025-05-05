@@ -1,5 +1,5 @@
 const { db } = require("../config/firebaseAdmin");
-const { PDFDocument, rgb } = require("pdf-lib");
+const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
 const { sendEmailToDestinataire, sendEmailToFit } = require("../utils/email");
@@ -137,7 +137,7 @@ const generateDeclarationMontageForProduct = async (req, res) => {
 
     const dossierRef = db.collection("dossiers").doc(dossierId);
     const snapshot = await getDoc(dossierRef);
-    if (!snapshot.exists())
+    if (!snapshot.exists)
       return res.status(404).json({ error: "Dossier introuvable" });
 
     const dossier = snapshot.data();
@@ -145,24 +145,57 @@ const generateDeclarationMontageForProduct = async (req, res) => {
     if (!produit) return res.status(404).json({ error: "Produit non trouvé" });
 
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([600, 500]);
-    const { height } = page.getSize();
+    const page = pdfDoc.addPage([595, 842]); // A4
+    const { width, height } = page.getSize();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    const draw = (text, x, y) => {
-      page.drawText(text, { x, y, size: 12, color: rgb(0, 0, 0) });
+    const drawText = (text, x, y, size = 12) => {
+      page.drawText(text, {
+        x,
+        y,
+        size,
+        font,
+        color: rgb(0, 0, 0),
+      });
     };
 
-    draw("📄 Déclaration de montage", 50, height - 50);
-    draw(`Nom produit : ${produit.name}`, 50, height - 80);
-    draw(
-      `Numéro de série : ${produit?.porte?.NumeroSerie || "—"}`,
-      50,
-      height - 100
-    );
-    draw(`Type : ${produit.typeFormulaire || "—"}`, 50, height - 120);
-    draw(`Destinataire : ${dossier.revendeur || "—"}`, 50, height - 140);
-    draw(`Livraison : ${dossier.deliveryDate || "—"}`, 50, height - 160);
-    draw(`Dossier : ${dossier.orderName || dossierId}`, 50, height - 180);
+    // 🔹 Logo VERIFIT
+    const logoPath = path.join(__dirname, "../../assets/verifit_logo.png");
+    const logoImageBytes = fs.readFileSync(logoPath);
+    const logoImage = await pdfDoc.embedPng(logoImageBytes);
+    page.drawImage(logoImage, {
+      x: width - 160,
+      y: height - 70,
+      width: 120,
+      height: 40,
+    });
+
+    // 🔹 Titre
+    drawText("Déclaration de montage", 50, height - 50, 16);
+    drawText("À remplir par l'installateur de la porte FIT et de ses options.", 50, height - 70, 10);
+
+    // 🔹 Bloc infos
+    let y = height - 110;
+    drawText("Nom de l'entreprise / Nom et fonction du responsable :", 50, y);
+    y -= 20;
+    drawText(`Dossier : ${dossier.orderName || dossierId}`, 50, y);
+    y -= 20;
+    drawText(`Nom du produit : ${produit.name || "—"}`, 50, y);
+    y -= 20;
+    drawText(`Numéro de série de la porte : ${produit?.porte?.NumeroSerie || "—"}`, 50, y);
+    y -= 20;
+    drawText(`N° immatriculation : ${produit.immatriculation || "—"}`, 50, y);
+    y -= 20;
+    drawText(`N° de série carrosserie : ${produit.numeroSerieCarrosserie || "—"}`, 50, y);
+    y -= 20;
+    drawText(`Marque caisse : ${produit.marqueCaisse || "—"}`, 50, y);
+    y -= 20;
+    drawText(`N° de hayon : ${produit.numeroHayon || "—"}`, 50, y);
+
+    y -= 40;
+    drawText("Date :", 50, y);
+    drawText(new Date().toISOString().slice(0, 10), 100, y);
+    drawText("Signature du responsable :", 300, y);
 
     const pdfBytes = await pdfDoc.save();
     const fileName = `DeclarationMontage-${dossierId}-${productId}.pdf`;
@@ -171,6 +204,7 @@ const generateDeclarationMontageForProduct = async (req, res) => {
 
     const fileUrl = `http://veryfit-production.up.railway.app/uploads/${fileName}`;
 
+    // 🔄 Mise à jour Firestore
     const produitsMaj = dossier.produits.map((p) =>
       p.productId === productId
         ? {
@@ -184,10 +218,7 @@ const generateDeclarationMontageForProduct = async (req, res) => {
     );
 
     await dossierRef.update({ produits: produitsMaj });
-    await db
-      .collection("orders")
-      .doc(dossierId)
-      .update({ produits: produitsMaj });
+    await db.collection("orders").doc(dossierId).update({ produits: produitsMaj });
 
     await db.collection("notifications").add({
       message: `📄 Déclaration de montage générée pour "${produit.name}" (dossier ${dossier.orderName})`,
@@ -198,7 +229,8 @@ const generateDeclarationMontageForProduct = async (req, res) => {
 
     return res.json({ success: true, url: fileUrl });
   } catch (error) {
-    res.status(500).json({ error: "Erreur serveur", details: error.message });
+    console.error("Erreur déclaration montage:", error.message);
+    return res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };
 

@@ -1,3 +1,4 @@
+// pages/fit/FitOrderDetails.js
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
@@ -18,8 +19,6 @@ const FitOrderDetails = () => {
         const snap = await getDoc(ref);
         if (snap.exists()) {
           setOrder({ id: snap.id, ...snap.data() });
-        } else {
-          console.warn("Dossier introuvable.");
         }
       } catch (e) {
         console.error("Erreur Firestore:", e);
@@ -63,6 +62,13 @@ const FitOrderDetails = () => {
     pdf.save(`Dossier_CE_${order.orderName || order.id}.pdf`);
   };
 
+  const formatValue = (val) => {
+    if (typeof val === "boolean") return val ? "✅ Oui" : "❌ Non";
+    if (Array.isArray(val)) return val.join("");
+    if (typeof val === "string" && val.trim() === "") return "—";
+    return val || "—";
+  };
+
   if (loading) return <div className="p-6">Chargement...</div>;
   if (!order) return <div className="p-6 text-red-500">Dossier introuvable</div>;
 
@@ -70,7 +76,7 @@ const FitOrderDetails = () => {
     <div className="p-6 max-w-6xl mx-auto bg-white rounded shadow space-y-8">
       <h1 className="text-3xl font-bold text-darkBlue">🗂️ Dossier CE – {order.orderName}</h1>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <p><strong>Numéro :</strong> {order.id}</p>
         <p><strong>Destinataire :</strong> {order.revendeur}</p>
         <p><strong>Email :</strong> {order.revendeurEmail}</p>
@@ -94,102 +100,82 @@ const FitOrderDetails = () => {
             ref={(el) => (formRefs.current[index] = el)}
             className="border border-gray-300 p-4 mb-6 rounded bg-gray-50 shadow-sm"
           >
-            <h3 className="text-lg font-bold text-blue-800 mb-2">
+            <h3 className="text-lg font-bold text-blue-800 mb-1">
               {prod.name} – Série : {prod.porte?.NumeroSerie || "—"}
             </h3>
-
-            <p className="text-sm text-gray-700 mb-2">
-              Type de formulaire : <span className="italic">{prod.typeFormulaire}</span>
+            <p className="text-sm mb-2 text-gray-700">
+              Type de formulaire : <span className="italic">{prod.typeFormulaire || "—"}</span>
             </p>
 
             {prod.filled ? (
               <>
-                <div className="bg-green-50 border-l-4 border-green-400 p-2 text-green-800 rounded mb-4">
+                <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded text-green-800 font-medium mb-4">
                   ✅ Formulaire de mise en service rempli
                 </div>
 
-                {/* ✅ Affichage sécurisé des sections avec sous-objets */}
-                {Object.entries(data).map(([sectionName, sectionData], i) => (
-                  <div key={i} className="mt-4">
-                    <h4 className="text-md font-semibold text-blue-700 mb-1">
-                      📌 {sectionName}
-                    </h4>
-                    <div className="ml-2 border-l border-gray-300 pl-4 space-y-1">
-                      {Object.entries(sectionData).map(([field, value], j) => {
-                        if (typeof value === "object" && value !== null) {
-                          return (
-                            <div key={j}>
-                              <p className="font-medium">{field} :</p>
-                              <ul className="ml-4 list-disc text-sm">
-                                {Object.entries(value).map(([subKey, subVal], k) => (
-                                  <li key={k}>
-                                    {subKey} :{" "}
-                                    {typeof subVal === "boolean"
-                                      ? subVal
-                                        ? "✅ Oui"
-                                        : "❌ Non"
-                                      : subVal || "—"}
-                                  </li>
+                {Object.entries(data).map(([sectionName, sectionContent], i) => (
+                  <div key={i} className="mb-4">
+                    <h4 className="font-semibold text-blue-700 mb-1">📌 {sectionName}</h4>
+                    <div className="pl-4 text-sm space-y-1">
+                      {Object.entries(sectionContent).map(([field, value], j) => (
+                        <div key={j}>
+                          {typeof value === "object" && value !== null && !Array.isArray(value) ? (
+                            <div>
+                              <span className="font-medium">{field} :</span>
+                              <ul className="ml-4 list-disc">
+                                {Object.entries(value).map(([k, v]) => (
+                                  <li key={k}>{k} : {formatValue(v)}</li>
                                 ))}
                               </ul>
                             </div>
-                          );
-                        }
-
-                        return (
-                          <p key={j} className="text-sm">
-                            <span className="font-medium">{field} :</span>{" "}
-                            {typeof value === "boolean"
-                              ? value
-                                ? "✅ Oui"
-                                : "❌ Non"
-                              : value || "—"}
-                          </p>
-                        );
-                      })}
+                          ) : (
+                            <p>
+                              <span className="font-medium">{field} :</span> {formatValue(value)}
+                            </p>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
 
-                <div className="flex flex-col gap-2 mt-6">
-                  <h4 className="font-semibold">📎 Documents disponibles :</h4>
+                <div className="mt-4 space-y-1 text-sm">
+                  <h4 className="font-semibold text-gray-800">📎 Documents disponibles :</h4>
 
                   {prod.documents?.declarationCE?.url ? (
                     <a
                       href={prod.documents.declarationCE.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="text-blue-600 underline"
+                      target="_blank" rel="noopener noreferrer"
                     >
                       📄 Télécharger déclaration CE
                     </a>
                   ) : (
-                    <p className="text-sm text-red-500">❌ Déclaration CE non reçue.</p>
+                    <p className="text-red-500">❌ Déclaration CE non reçue</p>
                   )}
 
                   {prod.documents?.declarationMontage?.url ? (
                     <a
                       href={prod.documents.declarationMontage.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="text-green-600 underline"
+                      target="_blank" rel="noopener noreferrer"
                     >
                       🧾 Télécharger déclaration de montage
                     </a>
                   ) : (
-                    <p className="text-sm text-red-500">❌ Déclaration de montage non reçue.</p>
+                    <p className="text-red-500">❌ Déclaration de montage non reçue</p>
                   )}
 
                   <button
                     onClick={() => exportSinglePDF(index, prod.name)}
-                    className="bg-indigo-600 text-white px-4 py-1 rounded hover:bg-indigo-700 mt-2 w-fit"
+                    className="mt-2 bg-indigo-600 text-white px-4 py-1 rounded hover:bg-indigo-700"
                   >
                     📥 Télécharger ce formulaire en PDF
                   </button>
                 </div>
               </>
             ) : (
-              <p className="text-red-600 mt-2">Formulaire non encore rempli ❌</p>
+              <p className="text-red-600 mt-2">❌ Formulaire non encore rempli</p>
             )}
           </div>
         );

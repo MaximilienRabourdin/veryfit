@@ -3,7 +3,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Roboto", "sans-serif"], // Police Roboto par défaut
+        sans: ["Roboto", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
+
       },
       fontSize: {
         h1: ["24px", "28.13px"], // Taille et hauteur de ligne pour h1

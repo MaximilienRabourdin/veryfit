@@ -100,71 +100,66 @@ const RevendeurDashboard = () => {
                 {Array.isArray(dossier.produits) &&
                 dossier.produits.some((p) => p.typeFormulaire) ? (
                   dossier.produits.map((p, index) => (
-                    <li key={index} className="space-y-2">
-                      <div className="flex flex-wrap justify-between items-center">
-                        <div className="w-full sm:w-2/3">
-                          <strong>{p.name || "Produit inconnu"}</strong> — Quantité :{" "}
-                          {p.quantity || 1}
-                        </div>
-
-                        <div className="space-x-3 flex items-center w-full sm:w-1/3 justify-end mt-2 sm:mt-0">
-                          {/* Déclaration de conformité CE en base64 */}
-                          {dossier.declarationCE?.base64 && (
-                            <a
-                              href={`data:application/pdf;base64,${dossier.declarationCE.base64}`}
-                              download={
-                                dossier.declarationCE.name || "declaration_ce.pdf"
-                              }
-                              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                            >
-                              Télécharger Déclaration CE
-                            </a>
-                          )}
-
-                          {/* Contrôle de montage */}
-                          {p.typeFormulaire && (
-                            <a
-                              href={`/revendeur/orders/${dossier.id}/produits/${p.productId}`}
-                              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-                            >
-                              Contrôle de montage et mise en service
-                            </a>
-                          )}
-
-                          {/* Déclaration de montage */}
-                          {dossier.declarationMontage?.url ? (
-                            <a
-                              href={dossier.declarationMontage.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                            >
-                              Voir déclaration de montage
-                            </a>
-                          ) : (
-                            <a
-                              href={`/revendeur/orders/${dossier.id}/declaration-montage`}
-                              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                            >
-                              Déclaration de montage à signer
-                            </a>
-                          )}
-
-                          {/* Notice */}
-                          <a
-                            href="https://drive.google.com/drive/u/0/folders/1SkwJS3TckM34AMIVnZ5QW8zV-R6oN5yK"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                          >
-                            📘 Voir la notice
-                          </a>
-                        </div>
-                      </div>
-                      <p className="bg-gray-200 text-gray-700 px-4 py-2 rounded">
+                    <li key={index} className="border rounded-lg p-4 mb-4 bg-gray-50 shadow-sm">
+                    <div className="text-md font-semibold mb-2">
+                      ✅ {p.name || "Produit inconnu"} — <span className="font-normal">Quantité : {p.quantity || 1}</span>
+                    </div>
+                  
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {dossier.declarationCE?.base64 && (
+                        <a
+                          href={`data:application/pdf;base64,${dossier.declarationCE.base64}`}
+                          download={dossier.declarationCE.name || "declaration_ce.pdf"}
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+                        >
+                          Télécharger Déclaration CE
+                        </a>
+                      )}
+                  
+                      {p.typeFormulaire && (
+                        <a
+                          href={`/revendeur/orders/${dossier.id}/produits/${p.productId}`}
+                          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition text-sm"
+                        >
+                          Contrôle de montage et mise en service
+                        </a>
+                      )}
+                  
+                      {dossier.declarationMontage?.url ? (
+                        <a
+                          href={dossier.declarationMontage.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                        >
+                          Voir déclaration de montage
+                        </a>
+                      ) : (
+                        <a
+                          href={`/revendeur/orders/${dossier.id}/declaration-montage`}
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                        >
+                          Déclaration de montage à signer
+                        </a>
+                      )}
+                  
+                      <a
+                        href="https://drive.google.com/drive/u/0/folders/1SkwJS3TckM34AMIVnZ5QW8zV-R6oN5yK"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition text-sm"
+                      >
+                        📘 Voir la notice
+                      </a>
+                    </div>
+                  
+                    {dossier.destinataire_type === "Carrossier" && (
+                      <div className="bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm">
                         Contrôle périodique (à venir)
-                      </p>
-                    </li>
+                      </div>
+                    )}
+                  </li>
+                  
                   ))
                 ) : (
                   <li className="text-red-600 font-semibold">
