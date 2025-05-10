@@ -7,7 +7,11 @@ const {
   generateDeclarationCEForProduct,
   generateDeclarationMontageForProduct,
   updateDocumentStatus,
+  generateDeclarationMontageCarrossier
 } = require("../controllers/dossierController");
+
+const { generateControlePeriodiquePDF } = require("../controllers/generateControlePeriodiquePDF");
+
 
 const router = express.Router();
 
@@ -68,6 +72,9 @@ router.post("/create", upload.fields(champsAcceptes), async (req, res) => {
 // 🔹 Routes : génération des PDF
 router.get("/generate/declaration-ce/:dossierId/:productId", generateDeclarationCEForProduct);
 router.get('/generate/declaration-montage/:dossierId/:productId', generateDeclarationMontageForProduct);
+router.get('/generate/declaration-montage-carrossier/:dossierId', generateDeclarationMontageCarrossier);
+
+router.post("/controle-periodique/generate/:dossierId/:produitId", generateControlePeriodiquePDF);
 
 // 🔹 Route : mise à jour d’un document spécifique
 router.post("/update-document", updateDocumentStatus);

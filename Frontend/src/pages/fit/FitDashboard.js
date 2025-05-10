@@ -7,6 +7,8 @@ import {
   orderBy,
   doc,
   deleteDoc,
+  deleteField,
+  updateDoc,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
@@ -17,6 +19,7 @@ import {
   FaSearch,
   FaClipboardCheck,
   FaFileSignature,
+  FaTimes,
 } from "react-icons/fa";
 
 const FitDashboard = () => {
@@ -49,8 +52,7 @@ const FitDashboard = () => {
         }));
         setNotifications(
           fetched.sort(
-            (a, b) =>
-              (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+            (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
           )
         );
       }
@@ -77,21 +79,37 @@ const FitDashboard = () => {
     }
   };
 
-  const countDocumentsCompletes = (order) => {
-    if (!order.produits || !Array.isArray(order.produits)) return 0;
+  const handleDeleteNotification = async (notifId) => {
+    try {
+      await deleteDoc(doc(db, "notifications", notifId));
+    } catch (error) {
+      console.error("Erreur suppression notification :", error);
+    }
+  };
 
-    return order.produits.reduce((acc, produit) => {
-      let count = 0;
-      if (produit.formulaire || produit.formulaireData) count += 1;
-      if (produit.documents?.declarationMontage?.url) count += 1;
-      if (produit.documents?.declarationCE?.url) count += 1;
-      return acc + count;
-    }, 0);
+  const countDocumentsCompletes = (order) => {
+    let count = 0;
+
+    if (order.produits && Array.isArray(order.produits)) {
+      count += order.produits.reduce((acc, produit) => {
+        let c = 0;
+        if (produit.formulaire || produit.formulaireData) c += 1;
+        if (produit.documents?.declarationMontage?.url) c += 1;
+        if (produit.documents?.declarationCE?.url) c += 1;
+        return acc + c;
+      }, 0);
+    }
+
+    if (order.declarationMontageCarrossierPdf) {
+      count += 1;
+    }
+
+    return count;
   };
 
   const countDocumentsTotal = (order) => {
     if (!order.produits || !Array.isArray(order.produits)) return 0;
-    return order.produits.length * 3;
+    return order.produits.length * 3 + 1;
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -111,6 +129,9 @@ const FitDashboard = () => {
             className="w-6 h-6 text-blue-600 cursor-pointer"
             onClick={() => setShowNotifications(!showNotifications)}
           />
+          {notifications.length > 0 && (
+            <span className="absolute top-0 right-0 bg-red-600 w-3 h-3 rounded-full"></span>
+          )}
         </div>
       </header>
 
@@ -118,10 +139,29 @@ const FitDashboard = () => {
         <div className="absolute right-0 top-16 bg-white shadow-lg w-96 h-96 overflow-y-auto p-4 z-10 border">
           <h2 className="text-lg font-bold mb-4">Notifications</h2>
           {notifications.map((notif) => (
-            <div key={notif.id} className="mb-4 border-b pb-2">
-              <p>{notif.message}</p>
+            <div
+              key={notif.id}
+              className="mb-4 border-b pb-2 flex justify-between items-start gap-2"
+            >
+              <div className="text-sm flex-1">
+                <p
+                  className="text-blue-700 hover:underline cursor-pointer"
+                  onClick={() => navigate(`/fit/orders/${notif.dossierId}`)}
+                >
+                  {notif.message}
+                </p>
+              </div>
+              <button
+                onClick={() => handleDeleteNotification(notif.id)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <FaTimes />
+              </button>
             </div>
           ))}
+          {notifications.length === 0 && (
+            <p className="text-sm text-gray-500">Aucune notification.</p>
+          )}
         </div>
       )}
 
@@ -138,8 +178,7 @@ const FitDashboard = () => {
           <p className="font-semibold">Documents en attente</p>
           <p className="text-2xl text-yellow-500 font-bold">
             {orders.reduce(
-              (acc, o) =>
-                acc + (countDocumentsTotal(o) - countDocumentsCompletes(o)),
+              (acc, o) => acc + (countDocumentsTotal(o) - countDocumentsCompletes(o)),
               0
             )}
           </p>
@@ -186,8 +225,7 @@ const FitDashboard = () => {
                         {order.destinataire_type || "Revendeur"}
                       </td>
                       <td className="p-3">
-                        {countDocumentsCompletes(order)} /{" "}
-                        {countDocumentsTotal(order)}
+                        {countDocumentsCompletes(order)} / {countDocumentsTotal(order)}
                       </td>
                       <td className="p-3 flex items-center gap-3">
                         <button
@@ -222,6 +260,28 @@ const FitDashboard = () => {
         <div className="bg-white shadow-md p-4 rounded">
           <h2 className="text-lg font-bold mb-4">Calendrier</h2>
           <Calendar onChange={setDate} value={date} />
+          <div className="mt-4">
+  <h3 className="font-bold text-sm text-gray-600 mb-2">📆 Rappels à venir</h3>
+  <ul className="text-sm space-y-1">
+    {orders
+      .filter(order => order.controlePeriodiqueDate)
+      .filter(order => {
+        const target = new Date(order.controlePeriodiqueDate.seconds * 1000);
+        return target >= new Date();
+      })
+      .sort((a, b) => a.controlePeriodiqueDate.seconds - b.controlePeriodiqueDate.seconds)
+      .slice(0, 5)
+      .map(order => {
+        const date = new Date(order.controlePeriodiqueDate.seconds * 1000).toLocaleDateString();
+        return (
+          <li key={order.id}>
+            📄 {order.orderName} – <span className="text-gray-500">{date}</span>
+          </li>
+        );
+      })}
+  </ul>
+</div>
+
         </div>
       </div>
     </div>

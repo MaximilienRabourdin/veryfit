@@ -1,12 +1,14 @@
-// pages/fit/FitOrderDetails.js
+""// pages/fit/FitOrderDetails.js
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import VeryfitLoader from "../../components/VeryfitLoader";
 
 const FitOrderDetails = () => {
   const { orderId } = useParams();
+  const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const db = getFirestore();
@@ -69,19 +71,46 @@ const FitOrderDetails = () => {
     return val || "—";
   };
 
-  if (loading) return <div className="p-6">Chargement...</div>;
-  if (!order) return <div className="p-6 text-red-500">Dossier introuvable</div>;
+  if (loading) return <div className="p-6">.<VeryfitLoader/></div>;
+  if (!order)
+    return <div className="p-6 text-red-500">Dossier introuvable</div>;
 
   return (
     <div className="p-6 max-w-6xl mx-auto bg-white rounded shadow space-y-8">
-      <h1 className="text-3xl font-bold text-darkBlue">🗂️ Dossier CE – {order.orderName}</h1>
+      <h1 className="text-3xl font-bold text-darkBlue">
+        🗂️ Dossier CE – {order.orderName}
+      </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        <p><strong>Numéro :</strong> {order.id}</p>
-        <p><strong>Destinataire :</strong> {order.revendeur}</p>
-        <p><strong>Email :</strong> {order.revendeurEmail}</p>
-        <p><strong>Statut :</strong> {order.status}</p>
+        <p>
+          <strong>Numéro :</strong> {order.id}
+        </p>
+        <p>
+          <strong>Destinataire :</strong> {order.revendeur}
+        </p>
+        <p>
+          <strong>Email :</strong> {order.revendeurEmail}
+        </p>
+        <p>
+          <strong>Statut :</strong> {order.status}
+        </p>
       </div>
+
+      {order.declarationMontageCarrossierPdf && (
+        <div className="bg-green-100 border border-green-500 rounded p-4 mt-4">
+          <h2 className="text-lg font-bold text-green-700 mb-2">
+            🧾 Déclaration de montage (Carrossier)
+          </h2>
+          <button
+            onClick={() =>
+              navigate(`/fit/orders/${orderId}/declaration-montage`)
+            }
+            className="text-blue-600 hover:underline"
+          >
+            📄 Voir l'aperçu de la déclaration de montage globale
+          </button>
+        </div>
+      )}
 
       <button
         onClick={exportAllPDFs}
@@ -104,7 +133,8 @@ const FitOrderDetails = () => {
               {prod.name} – Série : {prod.porte?.NumeroSerie || "—"}
             </h3>
             <p className="text-sm mb-2 text-gray-700">
-              Type de formulaire : <span className="italic">{prod.typeFormulaire || "—"}</span>
+              Type de formulaire :{" "}
+              <span className="italic">{prod.typeFormulaire || "—"}</span>
             </p>
 
             {prod.filled ? (
@@ -113,40 +143,54 @@ const FitOrderDetails = () => {
                   ✅ Formulaire de mise en service rempli
                 </div>
 
-                {Object.entries(data).map(([sectionName, sectionContent], i) => (
-                  <div key={i} className="mb-4">
-                    <h4 className="font-semibold text-blue-700 mb-1">📌 {sectionName}</h4>
-                    <div className="pl-4 text-sm space-y-1">
-                      {Object.entries(sectionContent).map(([field, value], j) => (
-                        <div key={j}>
-                          {typeof value === "object" && value !== null && !Array.isArray(value) ? (
-                            <div>
-                              <span className="font-medium">{field} :</span>
-                              <ul className="ml-4 list-disc">
-                                {Object.entries(value).map(([k, v]) => (
-                                  <li key={k}>{k} : {formatValue(v)}</li>
-                                ))}
-                              </ul>
+                {Object.entries(data).map(
+                  ([sectionName, sectionContent], i) => (
+                    <div key={i} className="mb-4">
+                      <h4 className="font-semibold text-blue-700 mb-1">
+                        📌 {sectionName}
+                      </h4>
+                      <div className="pl-4 text-sm space-y-1">
+                        {Object.entries(sectionContent).map(
+                          ([field, value], j) => (
+                            <div key={j}>
+                              {typeof value === "object" &&
+                              value !== null &&
+                              !Array.isArray(value) ? (
+                                <div>
+                                  <span className="font-medium">{field} :</span>
+                                  <ul className="ml-4 list-disc">
+                                    {Object.entries(value).map(([k, v]) => (
+                                      <li key={k}>
+                                        {k} : {formatValue(v)}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ) : (
+                                <p>
+                                  <span className="font-medium">{field} :</span>{" "}
+                                  {formatValue(value)}
+                                </p>
+                              )}
                             </div>
-                          ) : (
-                            <p>
-                              <span className="font-medium">{field} :</span> {formatValue(value)}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
 
                 <div className="mt-4 space-y-1 text-sm">
-                  <h4 className="font-semibold text-gray-800">📎 Documents disponibles :</h4>
+                  <h4 className="font-semibold text-gray-800">
+                    📎 Documents disponibles :
+                  </h4>
 
                   {prod.documents?.declarationCE?.url ? (
                     <a
                       href={prod.documents.declarationCE.url}
                       className="text-blue-600 underline"
-                      target="_blank" rel="noopener noreferrer"
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       📄 Télécharger déclaration CE
                     </a>
@@ -158,12 +202,15 @@ const FitOrderDetails = () => {
                     <a
                       href={prod.documents.declarationMontage.url}
                       className="text-green-600 underline"
-                      target="_blank" rel="noopener noreferrer"
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       🧾 Télécharger déclaration de montage
                     </a>
                   ) : (
-                    <p className="text-red-500">❌ Déclaration de montage non reçue</p>
+                    <p className="text-red-500">
+                      ❌ Déclaration de montage non reçue
+                    </p>
                   )}
 
                   <button
@@ -175,7 +222,9 @@ const FitOrderDetails = () => {
                 </div>
               </>
             ) : (
-              <p className="text-red-600 mt-2">❌ Formulaire non encore rempli</p>
+              <p className="text-red-600 mt-2">
+                ❌ Formulaire non encore rempli
+              </p>
             )}
           </div>
         );

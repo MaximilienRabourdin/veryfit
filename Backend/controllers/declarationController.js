@@ -46,7 +46,7 @@ const generateDeclarationPDF = async (req, res) => {
       formData.orderName
     }_${Date.now()}.pdf`;
     const filePath = path.join(__dirname, "../uploads", filename);
-    fs.writeFileSync(filePath, pdfBytes);
+    fs.writeFileSync(filePath, Buffer.from(pdfBytes));
 
     // 🔥 Enregistrement Firestore
     const firestoreRef = doc(db, "orders", orderId);

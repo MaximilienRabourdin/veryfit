@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebaseConfig";
 import { onAuthStateChanged, getIdTokenResult, getAuth } from "firebase/auth";
+import VeryfitLoader from "./VeryfitLoader";
 
 const AuthWrapper = ({ children }) => {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const AuthWrapper = ({ children }) => {
   }, [navigate]);
   
 
-  if (loading) return <div>Chargement...</div>;
+  if (loading) return <VeryfitLoader />;
   return <>{children}</>;
 };
 

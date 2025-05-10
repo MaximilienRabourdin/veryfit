@@ -53,6 +53,7 @@ import OrderDetails from "./pages/revendeur/RevendeurOrders";
 import GetFirebaseToken from "./components/GetFirebaseToken";
 import FormulaireProduitPage from "./pages/FormulaireProduitPage";
 import FitOrderDetails from "./pages/fit/FitOrderDetails";
+import DeclarationMontagePreview from "./pages/fit/DeclarationMontagePreview";
 
 function App() {
   const logFirebaseToken = async () => {
@@ -92,6 +93,10 @@ function App() {
             <Route index element={<FitDashboard />} />
             <Route path="dashboard" element={<FitDashboard />} />
             <Route path="orders/:orderId" element={<FitOrderDetails />} />
+            <Route
+              path="orders/:orderId/declaration-montage"
+              element={<DeclarationMontagePreview />}
+            />
             <Route path="create-order" element={<FitCreateOrder />} />
             <Route path="fit-create-account" element={<FitCreateAccount />} />
             <Route path="commandes" element={<CommandesList />} />
@@ -123,9 +128,10 @@ function App() {
               element={<DeclarationCEPreview />}
             />
             <Route
-              path="controle-periodique"
+              path="controle-periodique/:productId"
               element={<ControlePeriodiqueForm />}
             />
+
             <Route path="signature" element={<SignaturePage />} />
           </Route>
 
@@ -146,12 +152,11 @@ function App() {
               path="orders/:orderId/step/:stepIndex"
               element={<EtapeFormulaireCECarrossier />}
             />
-          
 
-<Route
-  path="orders/:orderId/produits/:produitId/declaration-montage"
-  element={<DeclarationMontageCarrossier />}
-/>
+            <Route
+              path="orders/:orderId/declaration-montage"
+              element={<DeclarationMontageCarrossier />}
+            />
 
             <Route
               path="declaration-ce/:orderId"

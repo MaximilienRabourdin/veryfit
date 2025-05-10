@@ -3,6 +3,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebaseConfig";
 import { fetchUserData } from "../services/firestoreService";
+import VeryfitLoader from "./VeryfitLoader";
 
 const ProtectedRoute = ({ allowedRoles }) => {
   const [user, loading] = useAuthState(auth);
@@ -40,7 +41,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
   console.log("Role :", role, ", isApproved :", isApproved);
 
   if (loading || checkingClaims) {
-    return <div>Chargement...</div>;
+    return <VeryfitLoader />;
   }
 
   if (!user) {

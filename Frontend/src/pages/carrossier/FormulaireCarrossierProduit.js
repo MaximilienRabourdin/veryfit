@@ -22,7 +22,7 @@ const FormulaireCarrossierProduit = () => {
       if (dossierSnap.exists()) {
         const dossierData = dossierSnap.data();
         const produitSelectionne = dossierData.produits.find(
-          (p) => p.productId === produitId
+          (p) => p.uuid === produitId || p.productId === produitId
         );
 
         setDossier({ id: dossierSnap.id, ...dossierData });

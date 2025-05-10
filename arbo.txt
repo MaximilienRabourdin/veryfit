@@ -7,18 +7,25 @@
 │   │   └── uploadService.js
 │   ├── checkClaims.js
 │   ├── config
+│   │   ├── convert-key.js
 │   │   ├── firebase-service-key.json
 │   │   ├── firebaseAdmin.js
+│   │   ├── google-service-account.json
 │   │   ├── google-service-key.json
-│   │   └── googleDrive.js
+│   │   ├── googleAuth.js
+│   │   ├── googleDrive.js
+│   │   ├── googleDriveAuth.js
+│   │   └── service-account-one-line.json
 │   ├── controllers
 │   │   ├── authController.js
 │   │   ├── clientController.js
 │   │   ├── commandController.js
+│   │   ├── declarationController.js
 │   │   ├── deletionRequestController.js
 │   │   ├── documentController.js
 │   │   ├── dossierController.js
 │   │   ├── logController.js
+│   │   ├── notificationsController.js
 │   │   ├── ordersController.js
 │   │   ├── productController.js
 │   │   ├── resellerControler.js
@@ -35,6 +42,7 @@
 │   │   ├── checkClaims.js
 │   │   ├── checkRole.js
 │   │   ├── roleMiddleware.js
+│   │   ├── upload.js
 │   │   └── verifyToken.js
 │   ├── models
 │   │   ├── dossierModel.js
@@ -46,7 +54,9 @@
 │   │   ├── auth.js
 │   │   ├── clients.js
 │   │   ├── commandRoutes.js
+│   │   ├── customClaims.js
 │   │   ├── customClaimsRoutes.js
+│   │   ├── declarationRoutes.js
 │   │   ├── deletionRequests.js
 │   │   ├── documentRoutes.js
 │   │   ├── dossiers.js
@@ -63,8 +73,10 @@
 │   │   ├── sessions.js
 │   │   ├── stats.js
 │   │   ├── test.js
+│   │   ├── uploadConformitePDF.js
 │   │   ├── uploadRoutes.js
 │   │   ├── userRoutes.js
+│   │   ├── users.js
 │   │   └── warranties.js
 │   ├── scripts
 │   │   ├── addProductTypes.js
@@ -75,26 +87,64 @@
 │   │   ├── importRevendeurs.js
 │   │   ├── migrateAuthUsersToFirestore.js
 │   │   ├── migrateRevendeursToUsers.js
+│   │   ├── normaliseCategories.js
+│   │   ├── recreateProductsCollection.js
 │   │   ├── seedDynamicForms.js
 │   │   ├── seedFirestore.js
 │   │   ├── seedFormTemplates.js
-│   │   ├── setCustomClaims.js
+│   │   ├── setClaims.js
 │   │   ├── setPassword.js
 │   │   ├── setRolepersonnal.js
-│   │   └── setUserRole.js
+│   │   ├── setUserRole.js
+│   │   └── updateAndAddProducts.js
 │   ├── server.js
 │   ├── services
 │   │   ├── googleDriveService.js
-│   │   └── uploadService.js
+│   │   ├── uploadService.js
+│   │   └── userService.js
 │   ├── setClaims.js
+│   ├── uploads
 │   └── utils
 │       ├── FitNotifications.js
 │       ├── email.js
 │       ├── googleDrive.js
 │       ├── logService.js
-│       └── signature.js
+│       ├── normalizeProduits.js
+│       ├── pdf.js
+│       ├── pdfCEGenerator.js
+│       ├── pdfGenerator.js
+│       ├── pdfService.js
+│       ├── productUtils.js
+│       ├── signature.js
+│       └── uploadNotice.js
 ├── Frontend
+│   ├── Backend
+│   │   ├── Clients.csv
+│   │   ├── Gamme_machine.csv
+│   │   ├── api
+│   │   ├── checkClaims.js
+│   │   ├── config
+│   │   ├── controllers
+│   │   ├── importCSVtoFirestore.js
+│   │   ├── importData.js
+│   │   ├── importProducts.js
+│   │   ├── importRevendeur.js
+│   │   ├── middlewares
+│   │   ├── models
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── routes
+│   │   ├── scripts
+│   │   ├── server.js
+│   │   ├── services
+│   │   ├── setClaims.js
+│   │   ├── uploads
+│   │   └── utils
 │   ├── README.md
+│   ├── arbo.txt
+│   ├── data
+│   │   ├── products.json
+│   │   └── revendeur.json
 │   ├── package-lock.json
 │   ├── package.json
 │   ├── public
@@ -104,6 +154,7 @@
 │   │   ├── logo512.png
 │   │   ├── manifest.json
 │   │   └── robots.txt
+│   ├── replace-localhost.js
 │   ├── src
 │   │   ├── App.css
 │   │   ├── App.js
@@ -120,7 +171,9 @@
 │   │   ├── pages
 │   │   ├── reportWebVitals.js
 │   │   ├── services
-│   │   └── setupTests.js
+│   │   ├── setupTests.js
+│   │   └── utils
+│   ├── structure.txt
 │   └── tailwind.config.js
 ├── arbo.txt
 ├── arborescence.txt
@@ -128,6 +181,8 @@
 │   ├── products.json
 │   └── revendeur.json
 ├── package-lock.json
-└── package.json
+├── package.json
+├── remove-console.mjs
+└── structure.txt
 
-21 directories, 110 files
+35 directories, 151 files

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DynamicForm from "../../components/DynamicForm";
+import VeryfitLoader from "../../components/VeryfitLoader";
 
 const FormPage = ({ productName }) => {
   const [formSteps, setFormSteps] = useState([]);
@@ -26,7 +27,7 @@ const FormPage = ({ productName }) => {
     // TODO: Envoyer les données au backend
   };
 
-  if (loading) return <p>Chargement...</p>;
+  if (loading) return <VeryfitLoader />;
 
   return (
     <div>

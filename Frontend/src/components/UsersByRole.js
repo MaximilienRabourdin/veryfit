@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getUsersByRole } from "../services/usersService";
+import VeryfitLoader from "./VeryfitLoader";
 
 const UsersByRole = ({ role }) => {
   const [users, setUsers] = useState([]);
@@ -20,7 +21,7 @@ const UsersByRole = ({ role }) => {
     fetchUsers();
   }, [role]);
 
-  if (loading) return <p>Chargement...</p>;
+  if (loading) return <VeryfitLoader />;
 
   return (
     <div>

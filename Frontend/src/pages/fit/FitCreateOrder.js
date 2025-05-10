@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { fetchRevendeurs } from "../../services/revendeurService";
 import { fetchProducts } from "../../services/productsService";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 
 const FitCreateOrder = () => {
@@ -21,34 +20,34 @@ const FitCreateOrder = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchRevendeurs().then(setRevendeurs).catch(console.error);
-    fetchProducts().then(setProducts).catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    const fetchCarrossiers = async () => {
+    const fetchUsers = async () => {
       try {
-        const q = query(
-          collection(db, "users_webapp"),
-          where("role", "==", "Carrossier"),
-          where("isApproved", "==", true)
-        );
-        const snapshot = await getDocs(q);
-        const list = snapshot.docs.map((doc) => {
+        const snapshot = await getDocs(collection(db, "users_webapp"));
+        const revs = [];
+        const carros = [];
+        snapshot.docs.forEach((doc) => {
           const data = doc.data();
-          return {
+          const role = (data.role || "").trim().toUpperCase();
+          const user = {
             id: doc.id,
             ...data,
             company: data.Nom || data.nom || data.company || "Non_inconnu",
             contact: data.Contact || data.contact || "",
           };
+          if (data.isApproved === true) {
+            if (role === "REVENDEUR") revs.push(user);
+            else if (role === "CARROSSIER") carros.push(user);
+          }
         });
-        setCarrossiers(list);
+        setRevendeurs(revs);
+        setCarrossiers(carros);
       } catch (err) {
-        console.error("Erreur récupération carrossiers :", err);
+        console.error("Erreur récupération des utilisateurs :", err);
       }
     };
-    fetchCarrossiers();
+
+    fetchUsers();
+    fetchProducts().then(setProducts).catch(console.error);
   }, []);
 
   useEffect(() => {

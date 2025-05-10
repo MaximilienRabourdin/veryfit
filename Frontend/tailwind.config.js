@@ -7,6 +7,9 @@ module.exports = {
         inter: ["Inter", "sans-serif"],
 
       },
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
+      },
       fontSize: {
         h1: ["24px", "28.13px"], // Taille et hauteur de ligne pour h1
       },

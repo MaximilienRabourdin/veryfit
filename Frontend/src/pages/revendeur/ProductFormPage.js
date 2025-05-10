@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DynamicForm from "../components/DynamicForm";
+import VeryfitLoader from "../../components/VeryfitLoader";
 
 const ProductFormPage = ({ productName }) => {
   const [form, setForm] = useState(null);
@@ -31,7 +32,7 @@ const ProductFormPage = ({ productName }) => {
     }
   };
 
-  if (!form) return <p>Chargement...</p>;
+  if (!form) return <VeryfitLoader />;
 
   return <DynamicForm form={form} onSubmit={handleFormSubmit} />;
 };

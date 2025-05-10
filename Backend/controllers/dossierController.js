@@ -3,7 +3,17 @@ const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
 const { sendEmailToDestinataire, sendEmailToFit } = require("../utils/email");
-const { getDoc, updateDoc } = require("firebase-admin/firestore");
+const { generateCarrossierDeclarationPDF } = require("../utils/generateCarrossierDeclarationPDF");
+
+
+
+const ensureUploadsDir = () => {
+  const uploadsDir = path.join(__dirname, "../uploads");
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  return uploadsDir;
+};
 
 // 🔹 Créer un dossier CE
 const createDossier = async (req, res) => {
@@ -36,12 +46,17 @@ const createDossier = async (req, res) => {
       },
     }));
 
+    const creationDate = new Date();
+    const controlePeriodiqueDate = new Date(creationDate);
+    controlePeriodiqueDate.setMonth(controlePeriodiqueDate.getMonth() + 6);
+    
     const dossierData = {
       ...parsed,
       produits: produitsAvecInfos,
       destinataire_type: destinataireType,
       status: "en_attente_remplissage",
-      createdAt: new Date(),
+      createdAt: creationDate,
+      controlePeriodiqueDate, // 🔹 Date de rappel stockée ici
     };
 
     await dossierRef.set(dossierData);
@@ -68,7 +83,7 @@ const generateDeclarationCEForProduct = async (req, res) => {
   try {
     const { dossierId, productId } = req.params;
     const dossierRef = db.collection("dossiers").doc(dossierId);
-    const snapshot = await getDoc(dossierRef);
+    const snapshot = await dossierRef.get();
     if (!snapshot.exists()) return res.status(404).json({ error: "Dossier introuvable" });
 
     const dossier = snapshot.data();
@@ -93,8 +108,9 @@ const generateDeclarationCEForProduct = async (req, res) => {
 
     const pdfBytes = await pdfDoc.save();
     const fileName = `DeclarationCE-${dossierId}-${productId}.pdf`;
-    const filePath = path.join(__dirname, `../../uploads/${fileName}`);
-    fs.writeFileSync(filePath, pdfBytes);
+    const uploadsDir = ensureUploadsDir();
+    const filePath = path.join(uploadsDir, fileName);
+    fs.writeFileSync(filePath, Buffer.from(pdfBytes));
     const fileUrl = `http://veryfit-production.up.railway.app/uploads/${fileName}`;
 
     const produitsMaj = dossier.produits.map((p) =>
@@ -137,8 +153,9 @@ const generateDeclarationMontageForProduct = async (req, res) => {
     if (!snapshot.exists()) return res.status(404).json({ error: "Dossier introuvable" });
 
     const dossier = snapshot.data();
-    const produit = dossier.produits.find((p) => p.uuid === productId);
-    if (!produit || !produit.declarationMontageData) {
+    const produit = dossier.produits.find(
+      (p) => p.uuid === productId || p.productId === productId
+    );    if (!produit || !produit.declarationMontageData) {
       return res.status(404).json({ error: "Déclaration de montage non trouvée." });
     }
 
@@ -188,14 +205,17 @@ const generateDeclarationMontageForProduct = async (req, res) => {
 
     const pdfBytes = await pdfDoc.save();
     const fileName = `DeclarationMontage-${dossierId}-${productId}.pdf`;
-    const filePath = path.join(__dirname, `../../uploads/${fileName}`);
-    fs.writeFileSync(filePath, pdfBytes);
+    const uploadsDir = ensureUploadsDir();
+    const filePath = path.join(uploadsDir, fileName);
+    fs.writeFileSync(filePath, Buffer.from(pdfBytes));
     const fileUrl = `http://veryfit-production.up.railway.app/uploads/${fileName}`;
 
     const produitsMaj = dossier.produits.map((p) =>
       p.uuid === productId
         ? {
             ...p,
+            filled: true,
+            status: "rempli",
             documents: {
               ...p.documents,
               declarationMontage: { url: fileUrl, status: "complété" },
@@ -219,6 +239,7 @@ const generateDeclarationMontageForProduct = async (req, res) => {
     res.status(500).json({ error: "Erreur serveur", details: error.message });
   }
 };
+
 
 // 🔹 Mise à jour d’un document
 const updateDocumentStatus = async (req, res) => {
@@ -287,10 +308,62 @@ const sendNotificationToFit = async ({ type, dossierId, produitId, message }) =>
   }
 };
 
+const generateDeclarationMontageCarrossier = async (req, res) => {
+  try {
+    const { dossierId } = req.params;
+    const dossierRef = db.collection("dossiers").doc(dossierId);
+    const snapshot = await dossierRef.get();
+    if (!snapshot.exists) return res.status(404).json({ error: "Dossier introuvable" });
+
+    const dossier = snapshot.data();
+    const data = dossier.declarationMontageData;
+    if (!data) return res.status(404).json({ error: "Données de déclaration de montage non trouvées" });
+
+    const fileUrl = await generateCarrossierDeclarationPDF(dossierId, data);
+
+    await dossierRef.update({ declarationMontageCarrossierPdf: fileUrl });
+
+    await db.collection("notifications").add({
+      type: "declarationMontageCarrossier",
+      dossierId,
+      message: `🧾 Déclaration de montage carrossier enregistrée pour le dossier (${data.numeroSerie} - ${data.nomCarrossier})`,
+      read: false,
+      createdAt: new Date(),
+    });
+
+    await sendEmailToFit({
+      subject: `[FIT DOORS] Nouvelle déclaration de montage reçue`,
+      html: `
+        <p>Bonjour,</p>
+        <p>Une <strong>déclaration de montage carrossier</strong> a été enregistrée sur la plateforme VERIFIT pour le dossier suivant :</p>
+        <ul>
+          <li><strong>Nom du carrossier :</strong> ${data.nomCarrossier}</li>
+          <li><strong>Numéro de série :</strong> ${data.numeroSerie}</li>
+          <li><strong>Date de montage :</strong> ${data.dateMontage}</li>
+        </ul>
+        <p>➡️ <a href="https://veryfit.vercel.app/fit/orders/${dossierId}" target="_blank">Consulter le dossier</a></p>
+        <p>Merci de vous connecter à votre espace FIT pour vérifier les documents.</p>
+        <p>Cordialement,<br>L'équipe VERIFIT</p>
+      `,
+    });
+
+    return res.json({ success: true, url: fileUrl });
+  } catch (error) {
+    console.error("Erreur génération déclaration de montage carrossier :", error);
+    return res.status(500).json({ error: "Erreur serveur", details: error.message });
+  }
+};
+
+
+
 module.exports = {
   createDossier,
   updateDocumentStatus,
   generateDeclarationCEForProduct,
   generateDeclarationMontageForProduct,
+  generateDeclarationMontageCarrossier, 
   sendNotificationToFit,
 };
+
+
+

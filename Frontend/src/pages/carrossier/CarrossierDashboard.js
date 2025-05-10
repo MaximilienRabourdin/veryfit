@@ -126,11 +126,11 @@ const CarrossierDashboard = () => {
                               </a>
                             ) : (
                               <a
-                                href={`/carrossier/orders/${dossier.id}/produits/${produitId}/declaration-montage`}
-                                className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
-                              >
-                                ✍️ Remplir déclaration montage
-                              </a>
+                              href={`/carrossier/orders/${dossier.id}/declaration-montage`}
+                              className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
+                            >
+                              ✍️ Remplir déclaration montage
+                            </a>
                             )}
 
                             {p.documents?.declarationCE?.url ? (

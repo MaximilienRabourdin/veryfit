@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import VeryfitLoader from "../../components/VeryfitLoader";
 
 const GestionDesComptes = () => {
   const [accounts, setAccounts] = useState([]);
@@ -45,7 +46,7 @@ const GestionDesComptes = () => {
     }
   };
 
-  if (loading) return <div>Chargement...</div>;
+  if (loading) return <VeryfitLoader />
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (

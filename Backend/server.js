@@ -13,6 +13,7 @@ const documentRoutes = require("./routes/documentRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const declarationRoutes = require("./routes/declarationRoutes");
 
+
 const app = express();
 
 console.log("🚀 Server init...");
@@ -39,6 +40,9 @@ app.use("/api/declaration", declarationRoutes);
 app.use("/", uploadRoutes);
 app.use("/api/notifications", require("./routes/notifications"));
 
+const generateRoutes = require("./routes/generate");
+app.use("/api/generate", generateRoutes);
+
 
 // ✅ Dossier statique pour les PDFs
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -48,6 +52,8 @@ app.use("/api/users", userRoutes);
 
 const customClaimsRoutes = require("./routes/customClaims");
 app.use("/api/custom-claims", customClaimsRoutes);
+
+
 
 // ✅ 404
 app.use((req, res) => {

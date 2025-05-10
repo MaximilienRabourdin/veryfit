@@ -10,6 +10,7 @@ import { app } from "../../firebaseConfig";
 import FormulaireTypeA from "./FormulaireTypeACarrossier";
 import FormulaireTypeB from "./FormulaireTypeBCarrossier";
 import DeclarationMontageForm from "./DeclarationMontageCarrossierForm";
+import VeryfitLoader from "../../components/VeryfitLoader";
 
 const EtapeFormulaireCarrossier = () => {
   const { orderId, stepIndex } = useParams();
@@ -48,7 +49,7 @@ const EtapeFormulaireCarrossier = () => {
     }
   };
 
-  if (loading) return <p>Chargement...</p>;
+  if (loading) return <VeryfitLoader />;
   if (!dossier) return <p>Dossier introuvable</p>;
 
   const produit = produits[currentStep];

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import VeryfitLoader from "../../components/VeryfitLoader";
 
 const FitValidateAccounts = () => {
   const [users, setUsers] = useState([]); // Liste des utilisateurs en attente
@@ -63,7 +64,7 @@ const FitValidateAccounts = () => {
 
       {/* Liste des utilisateurs */}
       {loading ? (
-        <p>Chargement...</p>
+        <VeryfitLoader/>
       ) : users.length > 0 ? (
         <div className="bg-white shadow-md rounded p-4">
           <table className="w-full table-auto">

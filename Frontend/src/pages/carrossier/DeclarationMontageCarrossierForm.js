@@ -1,4 +1,5 @@
-// pages/carrossier/DeclarationMontageCarrossier.js
+// ✅ Nouvelle version complète de DeclarationMontageCarrossierForm.js
+
 import React, { useRef, useState, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import {
@@ -18,14 +19,13 @@ const API_BASE_URL =
     : "https://veryfit-production.up.railway.app";
 
 const DeclarationMontageCarrossierForm = () => {
-  const { orderId, produitId } = useParams();
+  const { orderId } = useParams();
   const [form, setForm] = useState({
     nomCarrossier: "",
     dateMontage: "",
     numeroSerie: "",
     observations: "",
   });
-  const [produit, setProduit] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const sigCanvasRef = useRef(null);
 
@@ -36,17 +36,13 @@ const DeclarationMontageCarrossierForm = () => {
       if (!snap.exists()) return;
 
       const dossier = snap.data();
-      const prod = dossier.produits.find((p) => p.uuid === produitId);
-      if (prod) {
-        setProduit(prod);
-        if (prod.declarationMontageData) {
-          setForm(prod.declarationMontageData);
-          setSubmitted(true);
-        }
+      if (dossier.declarationMontageData) {
+        setForm(dossier.declarationMontageData);
+        setSubmitted(true);
       }
     };
     fetchData();
-  }, [orderId, produitId]);
+  }, [orderId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,45 +64,29 @@ const DeclarationMontageCarrossierForm = () => {
         signature: signatureData,
       };
 
-      // 🔁 Mise à jour du bon produit avec uuid
       const dossierRef = doc(db, "dossiers", orderId);
-      const snap = await getDoc(dossierRef);
-      const dossier = snap.data();
+      await updateDoc(dossierRef, {
+        declarationMontageData: fullForm,
+      });
 
-      const produitsMaj = dossier.produits.map((p) =>
-        p.uuid === produitId
-          ? {
-              ...p,
-              declarationMontageData: fullForm,
-              documents: {
-                ...p.documents,
-                declarationMontage: {
-                  status: "complété",
-                  url: "", // mis à jour ensuite par le backend
-                },
-              },
-            }
-          : p
-      );
-
-      await updateDoc(dossierRef, { produits: produitsMaj });
-
-      // 🔁 Appel backend pour générer le PDF
-      console.log("URL DECLARATION : ", `${API_BASE_URL}/generate/declaration-montage/${orderId}/${produit.uuid}`);
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const response = await fetch(
-        `${API_BASE_URL}/generate/declaration-montage/${orderId}/${produit.uuid}`,
+        `${API_BASE_URL}/api/dossiers/generate/declaration-montage-carrossier/${orderId}`,
         { method: "GET" }
       );
 
-      if (!response.ok) throw new Error("Erreur génération PDF");
+      const data = await response.json();
 
-      // 🔁 Ajout notification Firestore
+      if (!response.ok) {
+        console.error("❌ Erreur API:", data);
+        throw new Error(data?.error || "Erreur inconnue lors de la génération du PDF");
+      }
+
       await addDoc(collection(getFirestore(), "notifications"), {
-        type: "declarationMontage_produit",
+        type: "declarationMontage_carrossier",
         dossierId: orderId,
-        produitId,
-        message: `🧾 Déclaration de montage remplie pour le produit ${produit?.name || ""}`,
+        message: `🧾 Déclaration de montage carrossier enregistrée pour le dossier ${orderId}`,
         read: false,
         createdAt: new Date(),
       });
@@ -114,8 +94,8 @@ const DeclarationMontageCarrossierForm = () => {
       setSubmitted(true);
       alert("✅ Déclaration enregistrée et envoyée à FIT !");
     } catch (error) {
-      console.error("Erreur enregistrement :", error);
-      alert("❌ Une erreur est survenue lors de l'enregistrement.");
+      console.error("❌ Erreur enregistrement :", error);
+      alert("❌ Une erreur est survenue : " + error.message);
     }
   };
 
@@ -132,7 +112,7 @@ const DeclarationMontageCarrossierForm = () => {
   return (
     <div className="p-6 bg-white shadow rounded max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold text-blue-700 mb-6">
-        🧾 Déclaration de montage
+        🧾 Déclaration de montage (Carrossier)
       </h2>
 
       <div className="space-y-4">
