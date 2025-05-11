@@ -118,12 +118,12 @@ const FitCreateOrder = () => {
       const API_BASE_URL =
       window.location.hostname === "localhost"
         ? "http://localhost:5000"
-        : "https://veryfit-production.up.railway.app";
+        : "https://veryfit.fr";
 
-    const response = await fetch(`${API_BASE_URL}/api/dossiers/create`, {
-      method: "POST",
-      body: formDataToSend,
-    });
+        const response = await fetch(`${API_BASE_URL}/api/dossiers/create`, {
+          method: "POST",
+          body: formDataToSend,
+        });
 
       if (!response.ok) throw new Error("Erreur création dossier");
 

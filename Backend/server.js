@@ -20,8 +20,8 @@ console.log("🚀 Server init...");
 
 // ✅ Middleware
 app.use(cors({
-  origin: ["http://localhost:3000", "https://veryfit.vercel.app"],  // Ajout du domaine de production
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: ["https://www.veryfit.fr", "http://localhost:3000"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));
 app.use(express.json());
