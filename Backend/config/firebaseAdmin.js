@@ -9,15 +9,15 @@ let serviceAccount;
 
 try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT.replace(/\\n/g, "\n");
-    serviceAccount = JSON.parse(raw);
+    const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+    serviceAccount = JSON.parse(raw.replace(/\\n/g, '\n')); // échappement pour Railway
     console.log("🌍 Utilisation des identifiants via .env");
   } else {
     console.log("📁 Utilisation du fichier JSON local");
     serviceAccount = require(path.join(__dirname, "firebase-service-key.json"));
   }
 } catch (err) {
-  console.error("❌ Erreur de chargement des identifiants :", err);
+  console.error("❌ Erreur de chargement des identifiants Firebase :", err);
   process.exit(1);
 }
 
@@ -36,15 +36,15 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// 🔐 Initialisation des buckets Firebase Storage
+// 🔐 Initialisation Firebase Storage
 let bucket, storage;
 
 try {
   const bucketName = process.env.FIREBASE_STORAGE_BUCKET;
   if (!bucketName) throw new Error("FIREBASE_STORAGE_BUCKET manquant dans .env");
 
-  bucket = admin.storage().bucket(bucketName); // via admin
-  storage = getStorage().bucket(bucketName);   // via getStorage()
+  bucket = admin.storage().bucket(bucketName);
+  storage = getStorage().bucket(bucketName);
   console.log(`✅ Bucket Firebase Storage initialisé : ${bucketName}`);
 } catch (err) {
   console.error("❌ Erreur lors de l'accès au bucket Firebase Storage :", err.message);
@@ -52,7 +52,7 @@ try {
   storage = null;
 }
 
-// 🔐 Middleware Firebase pour sécuriser les routes avec les tokens
+// 🔐 Middleware de vérification de token Firebase
 const verifyToken = async (req, res, next) => {
   const authorization = req.headers.authorization;
   if (!authorization || !authorization.startsWith("Bearer ")) {
@@ -72,7 +72,7 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-// 🔽 Fonction pour uploader un fichier dans Firebase Storage
+// 📤 Fonction d'upload vers Firebase Storage
 const uploadFileToStorage = async (file) => {
   try {
     if (!file || !storage) throw new Error("Stockage Firebase non disponible ou fichier manquant.");
