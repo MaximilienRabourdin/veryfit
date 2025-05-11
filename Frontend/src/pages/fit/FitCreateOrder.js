@@ -118,7 +118,8 @@ const FitCreateOrder = () => {
       const API_BASE_URL =
       window.location.hostname === "localhost"
         ? "http://localhost:5000"
-        : "https://veryfit.fr";
+        : "https://veryfit.onrender.com";
+    
 
         const response = await fetch(`${API_BASE_URL}/api/dossiers/create`, {
           method: "POST",

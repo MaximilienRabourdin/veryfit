@@ -7,59 +7,61 @@ const path = require("path");
 const { admin, db } = require("./config/firebaseAdmin");
 const verifyToken = require("./middlewares/verifyToken");
 
+// ✅ Import des routes
 const dossierRoutes = require("./routes/dossiers");
 const ordersRoutes = require("./routes/orders");
 const documentRoutes = require("./routes/documentRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const declarationRoutes = require("./routes/declarationRoutes");
-const notificationsRoutes = require("./routes/notifications");
 const generateRoutes = require("./routes/generate");
 const userRoutes = require("./routes/users");
 const customClaimsRoutes = require("./routes/customClaims");
+const notificationsRoutes = require("./routes/notifications");
 
 const app = express();
 
 console.log("🚀 Server init...");
 
-// ✅ Middleware CORS
+// ✅ Middleware CORS (à placer AVANT les routes)
 app.use(cors({
-  origin: ["https://www.veryfit.fr", "http://localhost:3000"],
+  origin: [
+    "https://www.veryfit.fr",
+    "http://localhost:3000",
+    "https://veryfit.onrender.com"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));
 
-// ✅ Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Logger (optionnel)
+// ✅ Logger simple
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
+  console.log(`[${req.method}] ${req.originalUrl}`);
   next();
 });
 
-// ✅ Routes protégées et publiques
+// ✅ Routes API
 app.use("/api/orders", verifyToken, ordersRoutes);
 app.use("/api/dossiers", dossierRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/declaration", declarationRoutes);
-app.use("/api/notifications", notificationsRoutes);
 app.use("/api/generate", generateRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/custom-claims", customClaimsRoutes);
-
-// ✅ Uploads (PDF statiques)
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// ✅ Routes de base (upload, autres)
+app.use("/api/notifications", notificationsRoutes);
 app.use("/", uploadRoutes);
 
-// ✅ 404 catch-all
+// ✅ Fichiers statiques pour les PDF
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// ✅ Fallback 404
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route non trouvée" });
 });
 
-// ✅ Lancement serveur
+// ✅ Lancement du serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Serveur lancé sur le port ${PORT}`);
