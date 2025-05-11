@@ -54,6 +54,7 @@ import GetFirebaseToken from "./components/GetFirebaseToken";
 import FormulaireProduitPage from "./pages/FormulaireProduitPage";
 import FitOrderDetails from "./pages/fit/FitOrderDetails";
 import DeclarationMontagePreview from "./pages/fit/DeclarationMontagePreview";
+import Confidentialite from "./pages/Confidentialite";
 
 function App() {
   const logFirebaseToken = async () => {
@@ -87,6 +88,8 @@ function App() {
           <Route path="/users/:role" element={<UsersByRole />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/confidentialite" element={<Confidentialite />} />
+
 
           {/* Routes FIT */}
           <Route path="/fit/*" element={<FitLayout />}>
@@ -172,8 +175,7 @@ function App() {
           </Route>
 
 
-          <Route path="/confidentialite" element={<Confidentialite />} />
-
+          
 
           {/* Route pour 404 */}
           <Route path="*" element={<div>Page non trouvée - Erreur 404</div>} />
