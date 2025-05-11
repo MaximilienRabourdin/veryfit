@@ -171,6 +171,10 @@ function App() {
             <Route path="orders" element={<ClientOrders />} />
           </Route>
 
+
+          <Route path="/confidentialite" element={<Confidentialite />} />
+
+
           {/* Route pour 404 */}
           <Route path="*" element={<div>Page non trouvée - Erreur 404</div>} />
         </Routes>

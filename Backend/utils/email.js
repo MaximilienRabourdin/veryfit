@@ -42,7 +42,7 @@ const sendEmailToDestinataire = async ({
       }
 
       <p>Merci de vous connecter à votre espace pour compléter les formulaires :</p>
-      <p><a href="https://veryfit.vercel.app/login" target="_blank">Se connecter à la plateforme</a></p>
+      <p><a href="https://veryfit.fr/login" target="_blank">Se connecter à la plateforme</a></p>
 
       <p>Bonne journée,</p>
       <p>L'équipe FIT Doors</p>
@@ -56,7 +56,7 @@ const sendEmailToDestinataire = async ({
         <p>Ceci est un rappel automatique : le <strong>contrôle périodique</strong> de la porte installée pour le dossier <strong>${orderName}</strong> est à effectuer aujourd’hui.</p>
 
         <p>Merci de vous connecter à la plateforme VERIFIT pour le compléter :</p>
-        <p><a href="https://veryfit.vercel.app/revendeur/dashboard" target="_blank">Accéder à votre espace</a></p>
+        <p><a href="https://veryfit.fr/revendeur/dashboard" target="_blank">Accéder à votre espace</a></p>
 
         <p>L'équipe FIT Doors</p>
       `;
