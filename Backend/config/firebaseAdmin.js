@@ -1,4 +1,8 @@
-require("dotenv").config();
+// 🌍 Charge .env.production si NODE_ENV === 'production'
+require("dotenv").config({
+  path: process.env.NODE_ENV === "production" ? ".env.production" : ".env",
+});
+
 console.log("📦 Chargement firebaseAdmin.js...");
 
 const admin = require("firebase-admin");
@@ -9,12 +13,12 @@ let serviceAccount;
 
 try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    // ✅ Le JSON est injecté en une ligne depuis .env → il faut bien parser avec les bons sauts de ligne
+    // ✅ Parse la chaîne JSON avec les \n échappés
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    serviceAccount = JSON.parse(raw.replace(/\\n/g, '\n')); // pas de const ici
-    console.log("🌍 Utilisation des identifiants via .env");
+    serviceAccount = JSON.parse(raw.replace(/\\n/g, '\n'));
+    console.log("🌍 Utilisation des identifiants via .env.production");
   } else {
-    // 🗂 Fallback local pour développement
+    // 🗂 Fallback local en dev uniquement
     console.log("📁 Utilisation du fichier JSON local");
     serviceAccount = require(path.join(__dirname, "firebase-service-key.json"));
   }
