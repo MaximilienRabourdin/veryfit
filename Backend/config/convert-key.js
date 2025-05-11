@@ -1,8 +1,9 @@
+// convert-key.js
 const fs = require("fs");
 
-const raw = fs.readFileSync("google-service-account.json", "utf-8");
-const escaped = JSON.stringify(JSON.parse(raw));
+const serviceKey = require("./firebase-service-key.json"); // adapte le chemin si besoin
+serviceKey.private_key = serviceKey.private_key.replace(/\n/g, "\\n");
 
-fs.writeFileSync("service-account-one-line.json", escaped);
-
-console.log("✅ Clé convertie dans service-account-one-line.json");
+const oneLine = JSON.stringify(serviceKey);
+fs.writeFileSync("service-account-one-line.json", oneLine);
+console.log("✅ Fichier 'service-account-one-line.json' prêt à copier dans Railway.");

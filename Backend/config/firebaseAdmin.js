@@ -10,7 +10,7 @@ let serviceAccount;
 try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    serviceAccount = JSON.parse(raw.replace(/\\n/g, '\n')); // échappement pour Railway
+    serviceAccount = JSON.parse(raw.replace(/\\n/g, '\n')); // ✅ PAS de "const" ici
     console.log("🌍 Utilisation des identifiants via .env");
   } else {
     console.log("📁 Utilisation du fichier JSON local");
