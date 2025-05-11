@@ -9,10 +9,12 @@ let serviceAccount;
 
 try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    // ✅ Le JSON est injecté en une ligne depuis .env → il faut bien parser avec les bons sauts de ligne
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    serviceAccount = JSON.parse(raw.replace(/\\n/g, '\n')); // ✅ PAS de "const" ici
+    serviceAccount = JSON.parse(raw.replace(/\\n/g, '\n')); // pas de const ici
     console.log("🌍 Utilisation des identifiants via .env");
   } else {
+    // 🗂 Fallback local pour développement
     console.log("📁 Utilisation du fichier JSON local");
     serviceAccount = require(path.join(__dirname, "firebase-service-key.json"));
   }
@@ -36,8 +38,8 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// 🔐 Initialisation Firebase Storage
-let bucket, storage;
+let bucket = null;
+let storage = null;
 
 try {
   const bucketName = process.env.FIREBASE_STORAGE_BUCKET;
@@ -48,8 +50,6 @@ try {
   console.log(`✅ Bucket Firebase Storage initialisé : ${bucketName}`);
 } catch (err) {
   console.error("❌ Erreur lors de l'accès au bucket Firebase Storage :", err.message);
-  bucket = null;
-  storage = null;
 }
 
 // 🔐 Middleware de vérification de token Firebase
