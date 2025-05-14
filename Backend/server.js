@@ -64,6 +64,10 @@ app.use("/api/custom-claims", customClaimsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/", uploadRoutes);
 
+app.get("/test-cors", (req, res) => {
+  res.json({ message: "✅ CORS OK depuis Render" });
+});
+
 // ✅ Fichiers statiques pour les PDF
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
