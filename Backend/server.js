@@ -33,6 +33,9 @@ app.use(cors({
   credentials: true
 }));
 
+// ✅ Gère les requêtes de type OPTIONS (préflight CORS)
+app.options("*", cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
