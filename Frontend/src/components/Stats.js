@@ -13,7 +13,7 @@ const Stats = () => {
   useEffect(() => {
     // Récupération des statistiques via l'API
     axios
-      .get("http://veryfit-production.up.railway.app/api/stats")
+      .get("https://veryfit-backend.onrender.com")
       .then((response) => setStats(response.data))
       .catch((err) =>
         setError("Erreur lors de la récupération des statistiques.")

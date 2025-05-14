@@ -8,7 +8,7 @@ const LogsTable = () => {
   useEffect(() => {
     // Récupère les logs depuis l'API
     axios
-      .get("http://veryfit-production.up.railway.app/api/logs")
+      .get("https://veryfit-backend.onrender.com/api/logs")
       .then((response) => setLogs(response.data))
       .catch((err) => setError("Erreur lors de la récupération des logs."));
   }, []);

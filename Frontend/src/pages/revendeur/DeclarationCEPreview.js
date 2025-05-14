@@ -11,7 +11,7 @@ const DeclarationCEPreview = () => {
     const fetchPDF = async () => {
       try {
         const res = await fetch(
-          `http://veryfit-production.up.railway.app/api/dossiers/generate/declaration-ce/${orderId}`
+          `https://veryfit-backend.onrender.com/api/dossiers/generate/declaration-ce/${orderId}`
         );
         if (!res.ok) throw new Error("Erreur lors de la génération du PDF CE");
 

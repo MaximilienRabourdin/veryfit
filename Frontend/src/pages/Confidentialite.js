@@ -8,7 +8,7 @@ const Confidentialite = () => {
 
       <p className="mb-4">
         Le site <strong>veryfit</strong>, accessible à l’adresse <a href="https://veryfit.fr" className="text-blue-600 underline">https://veryfit.fr</a>,
-        est édité par <strong>FIT</strong>, situé(e) au <strong>[Adresse postale]</strong>.
+        est édité par <strong>FIT</strong>, situé(e) au <strong>6 Rue du Parc des Vergers, 91250 Tigery</strong>.
       </p>
 
       <h2 className="text-xl font-semibold mt-8 mb-2">1. Données personnelles collectées</h2>
@@ -93,9 +93,9 @@ const Confidentialite = () => {
       <p className="mb-4">
         Pour toute question relative à la confidentialité ou au traitement de vos données :
         <br />
-        📩 <strong>[adresse-email-contact@veryfit.fr]</strong>
+        📩 <strong>contact@fit-doors.fr</strong>
         <br />
-        📍 <strong>[Adresse postale complète]</strong>
+        📍 <strong>6 Rue du Parc des Vergers, 91250 Tigery</strong>
       </p>
     </div>
   );

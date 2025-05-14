@@ -17,10 +17,10 @@ const ManageAccounts = () => {
     setLoading(true);
     try {
       const pendingResponse = await axios.get(
-        "http://veryfit-production.up.railway.app/api/auth/get-unapproved-users"
+        "https://veryfit-backend.onrender.com/api/auth/get-unapproved-users"
       );
       const validatedResponse = await axios.get(
-        "http://veryfit-production.up.railway.app/api/auth/get-approved-users"
+        "https://veryfit-backend.onrender.com/api/auth/get-approved-users"
       );
 
       console.log("Comptes en attente :", pendingResponse.data.users);
@@ -46,7 +46,7 @@ const ManageAccounts = () => {
     setActionLoading((prev) => ({ ...prev, [uid]: true }));
     try {
       const response = await axios.post(
-        "http://veryfit-production.up.railway.app/api/auth/validate-account",
+        "https://veryfit-backend.onrender.com/api/auth/validate-account",
         { uid }
       );
       if (response.data.success) {
@@ -72,7 +72,7 @@ const ManageAccounts = () => {
     setActionLoading((prev) => ({ ...prev, [uid]: true }));
     try {
       const response = await axios.delete(
-        `http://veryfit-production.up.railway.app/api/auth/delete-account/${uid}`
+        `https://veryfit-backend.onrender.com/api/auth/delete-account/${uid}`
       );
       if (response.data.success) {
         setSuccessMessage("Compte supprimé avec succès !");

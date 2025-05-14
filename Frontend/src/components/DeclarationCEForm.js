@@ -78,7 +78,7 @@ const DeclarationCEForm = ({ onFinish }) => {
       formDataToSend.append("type", "declaration_ce");
 
       const res = await fetch(
-        "http://veryfit-production.up.railway.app/upload/declaration-ce",
+        "https://veryfit-backend.onrender.com/upload/declaration-ce",
         {
           method: "POST",
           body: formDataToSend,

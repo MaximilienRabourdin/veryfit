@@ -126,7 +126,7 @@ const DeclarationMontageForm = () => {
       formDataToSend.append("orderId", orderId);
 
       const response = await fetch(
-        "http://veryfit-production.up.railway.app/upload/declaration-montage",
+        "https://veryfit-backend.onrender.com/upload/declaration-montage",
         {
           method: "POST",
           body: formDataToSend,

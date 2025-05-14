@@ -10,17 +10,21 @@ router.post("/setCustomClaims", async (req, res) => {
   }
 
   try {
+    const normalizedRole = role.toLowerCase();
+
     await admin.auth().setCustomUserClaims(uid, {
-      role,
+      role: normalizedRole,
       isApproved: isApproved === true,
     });
 
-    
-
-    return res.status(200).json({ message: "Custom claims mis à jour avec succès." });
+    return res
+      .status(200)
+      .json({ message: "Custom claims mis à jour avec succès." });
   } catch (error) {
-    
-    return res.status(500).json({ error: "Erreur serveur lors de la définition des custom claims." });
+    console.error("Erreur setCustomClaims :", error);
+    return res
+      .status(500)
+      .json({ error: "Erreur serveur lors de la définition des custom claims." });
   }
 });
 

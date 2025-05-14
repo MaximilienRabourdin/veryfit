@@ -68,7 +68,7 @@ const CreateAccount = () => {
 
       // Étape 3 : Définir les revendications utilisateur via le backend
       const response = await fetch(
-        "http://veryfit-production.up.railway.app/api/auth/set-claims",
+        "https://veryfit-backend.onrender.com",
         {
           method: "POST",
           headers: {

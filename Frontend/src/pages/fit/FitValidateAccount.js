@@ -14,7 +14,7 @@ const FitValidateAccounts = () => {
     setError(null);
     try {
       const response = await axios.get(
-        "http://veryfit-production.up.railway.app/api/auth/unapproved"
+        "https://veryfit-backend.onrender.com/api/auth/unapproved"
       );
       if (response.data.success) {
         setUsers(response.data.data);
@@ -34,7 +34,7 @@ const FitValidateAccounts = () => {
     if (window.confirm("Êtes-vous sûr de vouloir valider ce compte ?")) {
       try {
         await axios.put(
-          `http://veryfit-production.up.railway.app/api/auth/validate/${userId}`
+          `https://veryfit-backend.onrender.com/api/auth/validate/${userId}`
         );
         setSuccessMessage(`Le compte ${email} a été validé avec succès !`);
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));

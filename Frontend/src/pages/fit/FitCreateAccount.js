@@ -85,9 +85,9 @@ const FitCreateAccount = () => {
       );
       console.log("✅ Utilisateur créé :", user.uid);
 
-      await user.getIdToken(true);
+      const idToken = await user.getIdToken();
 
-      // Enregistrement dans Firestore avec isApproved: true
+      // Enregistrement dans Firestore
       await setDoc(doc(db, "users_webapp", user.uid), {
         email,
         role,
@@ -101,20 +101,26 @@ const FitCreateAccount = () => {
         Pays,
         CodePaysRegion,
         Telephone,
-        isApproved: true, // ✅ auto-validation
+        isApproved: true,
         createdAt: new Date().toISOString(),
       });
 
       console.log("✅ Données enregistrées dans Firestore");
 
-      // Envoi des claims personnalisés incluant isApproved
+      // Appel au backend pour définir les custom claims
       const apiUrl =
-        "http://veryfit-production.up.railway.app/api/custom-claims/setCustomClaims";
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid: user.uid, role, isApproved: true }), // ✅ auto-validé
-      });
+        "https://veryfit-backend.onrender.com/api/custom-claims/setCustomClaims";
+
+        const roleLowerCase = role.toLowerCase();
+
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ uid: user.uid, role: roleLowerCase, isApproved: true }),
+        });
 
       if (!response.ok) {
         const errorData = await response.json();

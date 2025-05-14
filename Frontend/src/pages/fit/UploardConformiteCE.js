@@ -23,7 +23,7 @@ const UploadConformiteCE = ({ orderId, onUploadSuccess }) => {
     try {
       setUploading(true);
       const res = await fetch(
-        "http://veryfit-production.up.railway.app/upload/conformite-ce",
+        "https://veryfit-backend.onrender.com/upload/conformite-ce",
         {
           method: "POST",
           body: formData,

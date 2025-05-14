@@ -17,7 +17,7 @@ const RequestDeletionForm = () => {
     e.preventDefault();
     axios
       .post(
-        "http://veryfit-production.up.railway.app/api/deletion-requests",
+        "https://veryfit-backend.onrender.com",
         formData
       )
       .then((response) => setMessage("Demande envoyée avec succès !"))

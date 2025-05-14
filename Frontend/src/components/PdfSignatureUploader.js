@@ -38,7 +38,7 @@ const PdfSignatureUploader = ({ onUploadSuccess }) => {
       formData.append("userId", "test-user"); // À remplacer par l'ID réel
 
       const response = await fetch(
-        "http://veryfit-production.up.railway.app/api/documents/sign-pdf",
+        "https://veryfit-backend.onrender.com",
         {
           method: "POST",
           body: formData,

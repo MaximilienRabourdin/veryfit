@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://veryfit-production.up.railway.app/api/auth"; // Remplacez par l'URL de votre backend déployé si nécessaire
+const API_URL = "https://veryfit-backend.onrender.com"; // Remplacez par l'URL de votre backend déployé si nécessaire
 
 // 🔹 Récupérer les utilisateurs par rôle
 export const getUsersByRole = async (role) => {
