@@ -3,18 +3,16 @@ console.log("📦 Chargement firebaseAdmin.js...");
 
 const admin = require("firebase-admin");
 const { getStorage } = require("firebase-admin/storage");
-const path = require("path");
 
 let serviceAccount;
 
-// 🔐 Support variable d’environnement (Render) OU fallback fichier local
 try {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    console.log("📁 Utilisation de la clé via env FIREBASE_SERVICE_ACCOUNT");
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    console.log("📁 Utilisation de la clé via env FIREBASE_SERVICE_ACCOUNT_BASE64");
+    const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, "base64").toString("utf8");
+    serviceAccount = JSON.parse(decoded);
   } else {
-    console.log("📁 Utilisation du fichier JSON local");
-    serviceAccount = require(path.join(__dirname, "firebase-service-key.json"));
+    throw new Error("Aucune variable FIREBASE_SERVICE_ACCOUNT_BASE64 trouvée.");
   }
 } catch (err) {
   console.error("❌ Erreur de chargement des identifiants Firebase :", err.message);
@@ -29,28 +27,23 @@ if (!admin.apps.length) {
     });
     console.log("✅ Firebase initialisé");
   } catch (err) {
-    console.error("❌ Erreur d'initialisation Firebase :", err.message);
+    console.error("❌ Erreur d'initialisation Firebase :", err);
     process.exit(1);
   }
 }
 
 const db = admin.firestore();
-
-let bucket = null;
 let storage = null;
 
 try {
   const bucketName = process.env.FIREBASE_STORAGE_BUCKET;
-  if (!bucketName) throw new Error("FIREBASE_STORAGE_BUCKET manquant dans .env");
-
-  bucket = admin.storage().bucket(bucketName);
+  if (!bucketName) throw new Error("FIREBASE_STORAGE_BUCKET manquant");
   storage = getStorage().bucket(bucketName);
   console.log(`✅ Bucket Firebase Storage initialisé : ${bucketName}`);
 } catch (err) {
-  console.error("❌ Erreur lors de l'accès au bucket Firebase Storage :", err.message);
+  console.error("❌ Erreur accès au bucket Firebase :", err.message);
 }
 
-// 🔐 Middleware de vérification de token Firebase
 const verifyToken = async (req, res, next) => {
   const authorization = req.headers.authorization;
   if (!authorization || !authorization.startsWith("Bearer ")) {
@@ -70,7 +63,6 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-// 📤 Fonction d'upload vers Firebase Storage
 const uploadFileToStorage = async (file) => {
   try {
     if (!file || !storage) throw new Error("Stockage Firebase non disponible ou fichier manquant.");
@@ -80,8 +72,8 @@ const uploadFileToStorage = async (file) => {
     await fileUpload.makePublic();
     return `https://storage.googleapis.com/${storage.name}/${fileName}`;
   } catch (error) {
-    throw new Error("❌ Impossible d'uploader le fichier : " + error.message);
+    throw new Error("❌ Upload échoué : " + error.message);
   }
 };
 
-module.exports = { admin, db, bucket, storage, verifyToken, uploadFileToStorage };
+module.exports = { admin, db, storage, verifyToken, uploadFileToStorage };
