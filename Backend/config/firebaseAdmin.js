@@ -7,11 +7,17 @@ const path = require("path");
 
 let serviceAccount;
 
+// 🔐 Support variable d’environnement (Render) OU fallback fichier local
 try {
-  console.log("📁 Utilisation du fichier JSON local");
-  serviceAccount = require(path.join(__dirname, "firebase-service-key.json"));
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    console.log("📁 Utilisation de la clé via env FIREBASE_SERVICE_ACCOUNT");
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } else {
+    console.log("📁 Utilisation du fichier JSON local");
+    serviceAccount = require(path.join(__dirname, "firebase-service-key.json"));
+  }
 } catch (err) {
-  console.error("❌ Erreur de chargement des identifiants Firebase :", err);
+  console.error("❌ Erreur de chargement des identifiants Firebase :", err.message);
   process.exit(1);
 }
 
@@ -23,7 +29,7 @@ if (!admin.apps.length) {
     });
     console.log("✅ Firebase initialisé");
   } catch (err) {
-    console.error("❌ Erreur d'initialisation Firebase :", err);
+    console.error("❌ Erreur d'initialisation Firebase :", err.message);
     process.exit(1);
   }
 }
