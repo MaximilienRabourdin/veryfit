@@ -6,7 +6,6 @@ const path = require("path");
 const { admin, db } = require("./config/firebaseAdmin");
 const verifyToken = require("./middlewares/verifyToken");
 
-// ✅ Import des routes
 const dossierRoutes = require("./routes/dossiers");
 const ordersRoutes = require("./routes/orders");
 const documentRoutes = require("./routes/documentRoutes");
@@ -20,6 +19,7 @@ const notificationsRoutes = require("./routes/notifications");
 const app = express();
 
 console.log("🚀 Server init...");
+console.log("🧪 Debug: version Render active");
 
 // ✅ CORS manuel – prise en charge complète pour Render
 const allowedOrigins = [
@@ -53,8 +53,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Route de test CORS (à placer avant les routes dynamiques)
+// ✅ TEST : CORS endpoint
 app.get("/test-cors", (req, res) => {
+  console.log("✅ Requête test-cors reçue");
   res.json({ message: "✅ CORS OK depuis Render" });
 });
 
@@ -77,7 +78,6 @@ app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route non trouvée" });
 });
 
-// ✅ Lancement du serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Serveur lancé sur le port ${PORT}`);
