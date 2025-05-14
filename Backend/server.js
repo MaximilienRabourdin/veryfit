@@ -53,6 +53,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// ✅ Route de test CORS (à placer avant les routes dynamiques)
+app.get("/test-cors", (req, res) => {
+  res.json({ message: "✅ CORS OK depuis Render" });
+});
+
 // ✅ Routes API
 app.use("/api/orders", verifyToken, ordersRoutes);
 app.use("/api/dossiers", dossierRoutes);
@@ -63,10 +68,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/custom-claims", customClaimsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/", uploadRoutes);
-
-app.get("/test-cors", (req, res) => {
-  res.json({ message: "✅ CORS OK depuis Render" });
-});
 
 // ✅ Fichiers statiques pour les PDF
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
