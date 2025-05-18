@@ -4,6 +4,13 @@ const admin = require("firebase-admin");
 
 const db = admin.firestore(); // ✅ nécessaire pour écrire dans Firestore
 
+
+
+router.get("/ping", (req, res) => {
+  res.json({ message: "🟢 Custom claims route OK" });
+});
+
+
 router.post("/setCustomClaims", async (req, res) => {
   const { uid, role, isApproved } = req.body;
 
@@ -15,6 +22,9 @@ router.post("/setCustomClaims", async (req, res) => {
 
   try {
     const normalizedRole = role.toLowerCase();
+    console.log("➡️ Définition des claims pour", uid, "avec rôle", role);
+
+
 
     // ✅ 1. Définir les custom claims Firebase
     await admin.auth().setCustomUserClaims(uid, {

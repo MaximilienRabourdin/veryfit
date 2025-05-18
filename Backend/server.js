@@ -76,7 +76,7 @@ app.options("/api/custom-claims/setCustomClaims", (req, res) => {
   res.setHeader("Access-Control-Allow-Credentials", "true");
   return res.sendStatus(200);
 });
-app.use("/api/custom-claims", customClaimsRoutes);
+app.use("/api/custom-claims", verifyToken, customClaimsRoutes);
 
 // ✅ Fichiers statiques pour les PDF
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
