@@ -2,9 +2,9 @@ const admin = require("firebase-admin");
 const { db } = require("../config/firebaseAdmin");
 
 // Fonction principale pour créer un utilisateur avec un rôle
-const createUserWithRole = async ({ email, password, displayName, role }) => {
-  if (!email || !password || !role) {
-    throw new Error("Email, mot de passe et rôle sont obligatoires.");
+const createUserWithRole = async ({ email, password, displayName, role = "utilisateur" }) => {
+  if (!email || !password) {
+    throw new Error("Email et mot de passe sont obligatoires.");
   }
 
   try {
@@ -23,9 +23,7 @@ const createUserWithRole = async ({ email, password, displayName, role }) => {
       isApproved: true,
     });
 
-    
-
-    // 3. Enregistrer l'utilisateur dans Firestore (optionnel)
+    // 3. Enregistrer l'utilisateur dans Firestore
     await db.collection("users_webapp").doc(uid).set({
       uid,
       email,
@@ -43,7 +41,7 @@ const createUserWithRole = async ({ email, password, displayName, role }) => {
       role,
     };
   } catch (error) {
-    
+    console.error("❌ Erreur lors de la création de l'utilisateur :", error);
     throw error;
   }
 };

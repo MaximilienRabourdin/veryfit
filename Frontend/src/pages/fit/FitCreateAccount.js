@@ -78,16 +78,13 @@ const FitCreateAccount = () => {
         throw new Error("Cet email est déjà utilisé. Veuillez vous connecter.");
       }
 
-      const { user } = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      // 🔐 Création compte Firebase
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
       console.log("✅ Utilisateur créé :", user.uid);
 
       const idToken = await user.getIdToken();
 
-      // Enregistrement dans Firestore
+      // 🔎 Sauvegarde dans Firestore
       await setDoc(doc(db, "users_webapp", user.uid), {
         email,
         role,
@@ -107,31 +104,34 @@ const FitCreateAccount = () => {
 
       console.log("✅ Données enregistrées dans Firestore");
 
-      // Appel au backend pour définir les custom claims
+      // 🌐 Appel backend pour définir les custom claims
       const apiUrl =
         "https://veryfit-backend.onrender.com/api/custom-claims/setCustomClaims";
 
-        const roleLowerCase = role.toLowerCase();
+      const roleLowerCase = role.toLowerCase();
 
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify({ uid: user.uid, role: roleLowerCase, isApproved: true }),
-        });
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ uid: user.uid, role: roleLowerCase, isApproved: true }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.error ||
-            "Erreur lors de la définition des claims personnalisés."
+          errorData.error || "Erreur lors de la définition des claims personnalisés."
         );
       }
 
       const responseData = await response.json();
       console.log("🔄 Réponse du backend :", responseData);
+
+      // 🔁 Forcer la mise à jour des claims
+      await user.getIdToken(true);
+      console.log("🔁 Token actualisé avec les nouveaux claims.");
 
       setMessage("✅ Compte créé avec succès et activé immédiatement !");
       setFormData({
