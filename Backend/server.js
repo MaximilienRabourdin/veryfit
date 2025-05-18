@@ -35,6 +35,8 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
@@ -56,7 +58,10 @@ app.use("/api/declaration", declarationRoutes);
 app.use("/api/generate", generateRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationsRoutes);
-app.use("/api/custom-claims", verifyToken, customClaimsRoutes);
+
+// ⛔️ NE PAS METTRE verifyToken ici : les custom claims ne sont pas encore présents au moment de la requête
+app.use("/api/custom-claims", customClaimsRoutes);
+
 app.use("/", uploadRoutes);
 
 // ✅ Fichiers statiques
