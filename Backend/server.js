@@ -1,7 +1,7 @@
 require("dotenv").config();
-
 const express = require("express");
 const path = require("path");
+const cors = require("cors");
 
 const { admin, db } = require("./config/firebaseAdmin");
 const verifyToken = require("./middlewares/verifyToken");
@@ -21,39 +21,37 @@ const app = express();
 console.log("🚀 Server init...");
 console.log("🧪 Debug: version Render active");
 
-// ✅ CORS manuel – prise en charge complète pour Render
+// ✅ Middleware CORS propre
 const allowedOrigins = [
   "https://www.veryfit.fr",
   "http://localhost:3000",
-  "https://veryfit.onrender.com"
+  "https://veryfit.onrender.com",
 ];
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
-  next();
-});
-
+// ✅ Middleware parsing & logging
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ✅ Logger simple
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.originalUrl}`);
   next();
 });
 
-// ✅ TEST : CORS endpoint
+// ✅ Test CORS route
 app.get("/test-cors", (req, res) => {
   console.log("✅ Requête test-cors reçue");
   res.json({ message: "✅ CORS OK depuis Render" });
@@ -67,25 +65,18 @@ app.use("/api/declaration", declarationRoutes);
 app.use("/api/generate", generateRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationsRoutes);
+app.use("/api/custom-claims", verifyToken, customClaimsRoutes);
 app.use("/", uploadRoutes);
 
-app.options("/api/custom-claims/setCustomClaims", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  return res.sendStatus(200);
-});
-app.use("/api/custom-claims", verifyToken, customClaimsRoutes);
-
-// ✅ Fichiers statiques pour les PDF
+// ✅ Fichiers statiques
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ Fallback 404
+// ✅ 404 Fallback
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route non trouvée" });
 });
 
+// ✅ Serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Serveur lancé sur le port ${PORT}`);
