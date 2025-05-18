@@ -17,11 +17,9 @@ const customClaimsRoutes = require("./routes/customClaims");
 const notificationsRoutes = require("./routes/notifications");
 
 const app = express();
-
 console.log("🚀 Server init...");
-console.log("🧪 Debug: version Render active");
 
-// ✅ Middleware CORS propre
+// ✅ CORS bien placé AVANT routes
 const allowedOrigins = [
   "https://www.veryfit.fr",
   "http://localhost:3000",
@@ -37,24 +35,17 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
-// ✅ Middleware parsing & logging
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ✅ Logger
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.originalUrl}`);
   next();
-});
-
-// ✅ Test CORS route
-app.get("/test-cors", (req, res) => {
-  console.log("✅ Requête test-cors reçue");
-  res.json({ message: "✅ CORS OK depuis Render" });
 });
 
 // ✅ Routes API
@@ -71,12 +62,11 @@ app.use("/", uploadRoutes);
 // ✅ Fichiers statiques
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ 404 Fallback
+// ✅ Fallback
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route non trouvée" });
 });
 
-// ✅ Serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Serveur lancé sur le port ${PORT}`);
