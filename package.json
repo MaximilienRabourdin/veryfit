@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@supabase/supabase-js": "^2.46.1",
+    "cors": "^2.8.5",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1"
   },
