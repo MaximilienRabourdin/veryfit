@@ -66,9 +66,17 @@ app.use("/api/documents", documentRoutes);
 app.use("/api/declaration", declarationRoutes);
 app.use("/api/generate", generateRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/custom-claims", customClaimsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/", uploadRoutes);
+
+app.options("/api/custom-claims/setCustomClaims", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  return res.sendStatus(200);
+});
+app.use("/api/custom-claims", customClaimsRoutes);
 
 // ✅ Fichiers statiques pour les PDF
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
