@@ -104,20 +104,25 @@ const FitCreateAccount = () => {
 
       console.log("✅ Données enregistrées dans Firestore");
 
-      // 🌐 Appel backend pour définir les custom claims
-      const apiUrl =
-        "https://veryfit-backend.onrender.com/api/custom-claims/setCustomClaims";
+     // 🔁 Rafraîchissement avec retry si claims pas encore propagés
+let attempts = 0;
+let roleClaim;
 
-      const roleLowerCase = role.toLowerCase();
+while (attempts < 5) {
+  const tokenResult = await user.getIdTokenResult(true);
+  roleClaim = tokenResult.claims?.role;
+  if (roleClaim) {
+    console.log("✅ Rôle détecté après", attempts + 1, "essai(s) :", roleClaim);
+    break;
+  }
+  console.log("🔄 Claims non encore dispos, retry dans 1s...");
+  await new Promise((res) => setTimeout(res, 1000));
+  attempts++;
+}
 
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ uid: user.uid, role: roleLowerCase, isApproved: true }),
-      });
+if (!roleClaim) {
+  console.error("❌ Claims toujours absents après 5 tentatives");
+}
 
       if (!response.ok) {
         const errorData = await response.json();

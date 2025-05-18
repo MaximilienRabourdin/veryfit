@@ -61,9 +61,7 @@ function App() {
     const user = auth.currentUser;
     if (user) {
       const idToken = await user.getIdToken(true); // Récupère un nouveau token valide
-      console.log("Votre token ID Firebase :", idToken);
     } else {
-      console.log("Aucun utilisateur connecté.");
     }
   };
 
@@ -71,9 +69,7 @@ function App() {
 
   auth.onAuthStateChanged((user) => {
     if (user) {
-      console.log("Utilisateur connecté :", user.uid);
     } else {
-      console.log("Aucun utilisateur connecté.");
     }
   });
   return (

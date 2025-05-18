@@ -30,8 +30,17 @@ const AuthWrapper = ({ children }) => {
   
         const tokenResult = await getIdTokenResult(user);
         const claims = tokenResult.claims;
-  
-        console.log("📌 Claims Firebase :", claims);
+
+        if (!claims.role) {
+          console.warn("🔁 Retry claims dans AuthWrapper...");
+          const refreshedTokenResult = await user.getIdTokenResult(true);
+          if (!refreshedTokenResult.claims?.role) {
+            console.error("❌ Aucun rôle défini pour cet utilisateur même après retry.");
+            navigate("/unauthorized", { replace: true });
+            setLoading(false);
+            return;
+          }
+        }
   
         if (!claims.role) {
           console.error("❌ Aucun rôle défini pour cet utilisateur.");
