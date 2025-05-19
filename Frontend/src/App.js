@@ -55,6 +55,7 @@ import FormulaireProduitPage from "./pages/FormulaireProduitPage";
 import FitOrderDetails from "./pages/fit/FitOrderDetails";
 import DeclarationMontagePreview from "./pages/fit/DeclarationMontagePreview";
 import Confidentialite from "./pages/Confidentialite";
+import TestCors from "./pages/TestCors";
 
 function App() {
   const logFirebaseToken = async () => {
@@ -75,8 +76,14 @@ function App() {
   return (
     <Router>
       <GetFirebaseToken />
+
+      <Routes>
+    <Route path="/test-cors" element={<TestCors />} />
+  </Routes>
       <AuthWrapper>
         <Routes>
+
+
           {/* Routes publiques */}
           <Route path="/" element={<Login />} />
           <Route path="/create-account" element={<CreateAccount />} />
