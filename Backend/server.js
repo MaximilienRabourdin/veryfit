@@ -23,8 +23,6 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://www.veryfit.fr",
   "https://veryfit.onrender.com", // à retirer si non utile
-  "null" // ← AJOUTE CETTE LIGNE
-
 ];
 
 app.use(
@@ -43,6 +41,9 @@ app.use(
     credentials: true,
   })
 );
+
+// ✅ Réponse aux requêtes OPTIONS (très important)
+app.options("*", cors());
 
 // ✅ Middlewares essentiels
 app.use(express.json());
