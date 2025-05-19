@@ -37,7 +37,7 @@ const FitCreateAccount = () => {
     setError("");
     setMessage("");
     setLoading(true);
-
+  
     const {
       email,
       password,
@@ -53,36 +53,16 @@ const FitCreateAccount = () => {
       CodePaysRegion,
       Telephone,
     } = formData;
-
-    if (!email || !password || !role || !Nom || !Prenom) {
-      setError("Tous les champs obligatoires doivent être remplis.");
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères.");
-      setLoading(false);
-      return;
-    }
-
-    if (!["Revendeur", "Carrossier", "Utilisateur"].includes(role)) {
-      setError("Rôle invalide. Veuillez choisir un rôle valide.");
-      setLoading(false);
-      return;
-    }
-
+  
     try {
       const signInMethods = await fetchSignInMethodsForEmail(auth, email);
       if (signInMethods.length > 0) {
         throw new Error("Cet email est déjà utilisé. Veuillez vous connecter.");
       }
-
-      // 🔐 Création de l'utilisateur
+  
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       console.log("✅ Utilisateur créé :", user.uid);
-
-      // 📄 Enregistrement dans Firestore
+  
       await setDoc(doc(db, "users_webapp", user.uid), {
         email,
         role,
@@ -100,45 +80,29 @@ const FitCreateAccount = () => {
         createdAt: new Date().toISOString(),
       });
       console.log("✅ Données enregistrées dans Firestore");
-
-      // 🔁 Attente active de la propagation des custom claims
+  
+      // 🔁 Rafraîchissement + vérification claims côté client
       let attempts = 0;
-      let roleClaim;
+      let claims = null;
+  
       while (attempts < 5) {
         const tokenResult = await user.getIdTokenResult(true);
-        roleClaim = tokenResult.claims?.role;
-        if (roleClaim) {
-          console.log("✅ Rôle détecté après", attempts + 1, "essai(s) :", roleClaim);
-          break;
-        }
-        console.log("🔄 Claims non encore disponibles, nouvelle tentative dans 1s...");
-        await new Promise((res) => setTimeout(res, 1000));
+        claims = tokenResult.claims;
+  
+        console.log(`🔁 Retry ${attempts + 1}/5 - claims :`, claims);
+  
+        if (claims && claims.role) break;
+  
+        await new Promise((res) => setTimeout(res, 1000)); // 1s
         attempts++;
       }
-
-      if (!roleClaim) {
-        console.error("❌ Claims toujours absents après 5 tentatives");
-        setError("Une erreur est survenue lors de l’activation du compte.");
-        setLoading(false);
-        return;
+  
+      if (!claims || !claims.role) {
+        throw new Error("❌ Impossible de récupérer les claims Firebase. Veuillez réessayer.");
       }
-
+  
       setMessage("✅ Compte créé avec succès et activé immédiatement !");
-      setFormData({
-        email: "",
-        password: "",
-        role: "",
-        Nom: "",
-        Prenom: "",
-        Numero: "",
-        NumeroAdherent: "",
-        CodePostal: "",
-        CodeVendeur: "",
-        Contact: "",
-        Pays: "",
-        CodePaysRegion: "",
-        Telephone: "",
-      });
+      setFormData({ ...formData, email: "", password: "", role: "" });
     } catch (err) {
       console.error("❌ Erreur lors de la création du compte :", err.message);
       setError(err.message);
