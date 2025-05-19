@@ -17,6 +17,17 @@ const customClaimsRoutes = require("./routes/customClaims");
 const notificationsRoutes = require("./routes/notifications");
 
 const app = express();
+
+// 🔓 Middleware CORS brut pour Render
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  if (req.method === "OPTIONS") return res.sendStatus(200);
+  next();
+});
+
 console.log("🚀 Server init...");
 
 // ✅ CORS setup
