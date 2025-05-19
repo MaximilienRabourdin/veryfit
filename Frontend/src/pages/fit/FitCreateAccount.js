@@ -82,8 +82,6 @@ const FitCreateAccount = () => {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       console.log("✅ Utilisateur créé :", user.uid);
 
-      const idToken = await user.getIdToken();
-
       // 🔎 Sauvegarde dans Firestore
       await setDoc(doc(db, "users_webapp", user.uid), {
         email,
@@ -104,39 +102,27 @@ const FitCreateAccount = () => {
 
       console.log("✅ Données enregistrées dans Firestore");
 
-     // 🔁 Rafraîchissement avec retry si claims pas encore propagés
-let attempts = 0;
-let roleClaim;
-
-while (attempts < 5) {
-  const tokenResult = await user.getIdTokenResult(true);
-  roleClaim = tokenResult.claims?.role;
-  if (roleClaim) {
-    console.log("✅ Rôle détecté après", attempts + 1, "essai(s) :", roleClaim);
-    break;
-  }
-  console.log("🔄 Claims non encore dispos, retry dans 1s...");
-  await new Promise((res) => setTimeout(res, 1000));
-  attempts++;
-}
-
-if (!roleClaim) {
-  console.error("❌ Claims toujours absents après 5 tentatives");
-}
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Erreur lors de la définition des claims personnalisés."
-        );
+      // 🔁 Rafraîchissement du token avec retry
+      let attempts = 0;
+      let roleClaim;
+      while (attempts < 5) {
+        const tokenResult = await user.getIdTokenResult(true);
+        roleClaim = tokenResult.claims?.role;
+        if (roleClaim) {
+          console.log("✅ Rôle détecté après", attempts + 1, "essai(s) :", roleClaim);
+          break;
+        }
+        console.log("🔄 Claims non encore dispos, retry dans 1s...");
+        await new Promise((res) => setTimeout(res, 1000));
+        attempts++;
       }
 
-      const responseData = await response.json();
-      console.log("🔄 Réponse du backend :", responseData);
-
-      // 🔁 Forcer la mise à jour des claims
-      await user.getIdToken(true);
-      console.log("🔁 Token actualisé avec les nouveaux claims.");
+      if (!roleClaim) {
+        console.error("❌ Claims toujours absents après 5 tentatives");
+        setError("Une erreur est survenue lors de l’activation du compte.");
+        setLoading(false);
+        return;
+      }
 
       setMessage("✅ Compte créé avec succès et activé immédiatement !");
       setFormData({
