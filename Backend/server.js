@@ -18,23 +18,11 @@ const notificationsRoutes = require("./routes/notifications");
 
 const app = express();
 
-// 🔓 Middleware CORS brut pour Render
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  if (req.method === "OPTIONS") return res.sendStatus(200);
-  next();
-});
-
-console.log("🚀 Server init...");
-
-// ✅ CORS setup
+// ✅ CORS setup - ne pas doubler avec un autre middleware CORS !
 const allowedOrigins = [
   "http://localhost:3000",
   "https://www.veryfit.fr",
-  "https://veryfit.onrender.com",
+  "https://veryfit.onrender.com", // à retirer si non utile
 ];
 
 app.use(
@@ -54,6 +42,7 @@ app.use(
   })
 );
 
+// ✅ Middlewares essentiels
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -63,30 +52,26 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Routes protégées (avec token)
-app.use("/api/orders", verifyToken, ordersRoutes);
+// ✅ Routes
+app.use("/api/orders", verifyToken, ordersRoutes); // protégée
 app.use("/api/dossiers", dossierRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/declaration", declarationRoutes);
 app.use("/api/generate", generateRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationsRoutes);
-
-// ⛔ Pas de token ici : claims ne sont pas encore présents
-app.use("/api/custom-claims", customClaimsRoutes);
+app.use("/api/custom-claims", customClaimsRoutes); // sans token
 
 // ✅ Uploads publics
 app.use("/", uploadRoutes);
-
-// ✅ Fichiers statiques
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// 🔻 Fallback route
+// 🔻 404 fallback
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route non trouvée" });
 });
 
-// ✅ Lancement
+// ✅ Lancement serveur
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Serveur lancé sur le port ${PORT}`);
