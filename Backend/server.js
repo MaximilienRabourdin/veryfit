@@ -26,7 +26,7 @@ const allowedOrigins = [
   "null" // ← uniquement si test fichier local  // à retirer si non utile
 ];
 
-app.use(git
+app.use(
   cors({
     origin: function (origin, callback) {
       console.log("🌐 Requête entrante depuis :", origin);
