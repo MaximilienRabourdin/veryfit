@@ -7,20 +7,17 @@ const createUserWithRole = async ({ email, password, displayName, role = "Utilis
   }
 
   try {
-    // 🔹 Création de l'utilisateur Firebase Auth
     const userRecord = await admin.auth().createUser({
       email,
       password,
       displayName,
     });
 
-    // 🔹 Définition immédiate des custom claims (role + approbation)
     await admin.auth().setCustomUserClaims(userRecord.uid, {
       role,
       isApproved: true,
     });
 
-    // 🔹 Sauvegarde dans Firestore (collection users_webapp)
     await db.collection("users_webapp").doc(userRecord.uid).set({
       uid: userRecord.uid,
       email,
@@ -30,10 +27,9 @@ const createUserWithRole = async ({ email, password, displayName, role = "Utilis
       createdAt: new Date(),
     });
 
-    // 🔎 Vérification des claims immédiatement après création
-    const refreshedUser = await admin.auth().getUser(userRecord.uid);
-    const claims = refreshedUser.customClaims || {};
-    console.log("✅ Claims définis pour", userRecord.uid, ":", claims);
+    const updatedUser = await admin.auth().getUser(userRecord.uid);
+    const claims = updatedUser.customClaims;
+    console.log("✅ Claims immédiatement appliqués :", claims);
 
     return {
       success: true,
