@@ -22,10 +22,11 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "https://www.veryfit.fr",
-  "https://veryfit.onrender.com", // à retirer si non utile
+  "https://veryfit.onrender.com",
+  "null" // ← uniquement si test fichier local  // à retirer si non utile
 ];
 
-app.use(
+app.use(git
   cors({
     origin: function (origin, callback) {
       console.log("🌐 Requête entrante depuis :", origin);
