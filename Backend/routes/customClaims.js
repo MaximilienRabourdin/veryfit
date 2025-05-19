@@ -36,16 +36,18 @@ router.post("/setCustomClaims", async (req, res) => {
   }
 });
 
-// 🔎 GET des claims actuels pour un UID donné
 router.get("/getClaims/:uid", async (req, res) => {
   const { uid } = req.params;
 
   try {
-    const userRecord = await admin.auth().getUser(uid);
-    const claims = userRecord.customClaims || {};
-    return res.status(200).json({ success: true, uid, claims });
+    const user = await admin.auth().getUser(uid);
+    return res.status(200).json({
+      success: true,
+      uid: user.uid,
+      customClaims: user.customClaims || {},
+    });
   } catch (error) {
-    console.error("❌ Erreur getClaims:", error);
+    console.error("❌ Erreur getClaims:", error.message);
     return res.status(500).json({ success: false, error: error.message });
   }
 });
