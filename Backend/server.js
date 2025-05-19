@@ -18,12 +18,14 @@ const notificationsRoutes = require("./routes/notifications");
 
 const app = express();
 
-// ✅ CORS setup - ne pas doubler avec un autre middleware CORS !
+
+
+// CORS setup
 const allowedOrigins = [
   "http://localhost:3000",
   "https://www.veryfit.fr",
   "https://veryfit.onrender.com",
-  "null" // ← uniquement si test fichier local  // à retirer si non utile
+  "null" 
 ];
 
 app.use(
@@ -42,6 +44,18 @@ app.use(
     credentials: true,
   })
 );
+
+// ✅ Gestion manuelle du préflight (Render bug fix)
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.header("Access-Control-Allow-Credentials", "true");
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // ✅ Réponse aux requêtes OPTIONS (très important)
 app.options("*", cors());
