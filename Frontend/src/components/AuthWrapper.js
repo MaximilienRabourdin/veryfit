@@ -1,3 +1,5 @@
+// components/AuthWrapper.js
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebaseConfig";
@@ -14,55 +16,40 @@ const AuthWrapper = ({ children }) => {
       if (!user) {
         console.warn("🚨 Aucun utilisateur détecté.");
         navigate("/", { replace: true });
-        setLoading(false);
-        return;
+        return setLoading(false);
       }
 
-      try {
-        console.log("👤 Utilisateur détecté :", user.email);
+      let claims;
+      for (let i = 0; i < 5; i++) {
+        const result = await user.getIdTokenResult(true);
+        claims = result.claims;
+        if (claims.role) break;
+        console.log(`🔁 Retry claims AuthWrapper ${i + 1}/5...`);
+        await new Promise(res => setTimeout(res, 1000));
+      }
 
-        let claims;
-        for (let i = 0; i < 5; i++) {
-          const result = await getIdTokenResult(user, true);
-          claims = result.claims;
-          if (claims.role) {
-            console.log(`✅ Claims récupérés (tentative ${i + 1}) :`, claims);
-            break;
-          }
-          console.log(`🔄 Claims non disponibles (tentative ${i + 1}), retry...`);
-          await new Promise((r) => setTimeout(r, 1000));
-        }
-
-        if (!claims || !claims.role) {
-          console.error("❌ Aucun rôle défini même après retry.");
-          navigate("/unauthorized", { replace: true });
-          return;
-        }
-
-        if (!claims.isApproved) {
-          console.warn("⛔ Utilisateur non approuvé.");
-          navigate("/", { replace: true });
-          return;
-        }
-
-        const redirectMap = {
-          "Super Admin": "/fit/dashboard",
-          "admin": "/fit/dashboard",
-          "revendeur": "/revendeur/dashboard",
-          "carrossier": "/carrossier/dashboard",
-          "utilisateur": "/client/dashboard",
-        };
-
-        const destination = redirectMap[claims.role.toLowerCase()];
-        if (destination && location.pathname === "/unauthorized") {
-          navigate(destination, { replace: true });
-        }
-      } catch (error) {
-        console.error("🚨 Erreur lors de la récupération des claims :", error);
+      if (!claims.role) {
+        console.error("❌ Aucun rôle défini même après retry.");
         navigate("/unauthorized", { replace: true });
-      } finally {
-        setLoading(false);
+        return setLoading(false);
       }
+
+      if (!claims.isApproved) {
+        console.warn("⛔ Utilisateur non approuvé.");
+        navigate("/", { replace: true });
+        return setLoading(false);
+      }
+
+      const roleToPath = {
+        "Super Admin": "/fit/dashboard",
+        "Revendeur": "/revendeur/dashboard",
+        "Carrossier": "/carrossier/dashboard",
+        "Utilisateur": "/client/dashboard",
+      };
+
+      const path = roleToPath[claims.role];
+      if (path) navigate(path, { replace: true });
+      setLoading(false);
     });
 
     return () => unsubscribe();
