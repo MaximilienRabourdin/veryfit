@@ -16,23 +16,24 @@ const userRoutes = require("./routes/users");
 const customClaimsRoutes = require("./routes/customClaims");
 const notificationsRoutes = require("./routes/notifications");
 
-
 const app = express();
 console.log("🚀 Server init...");
 
-// ✅ CORS bien placé AVANT routes
+// ✅ CORS setup
 const allowedOrigins = [
-  "https://www.veryfit.fr",
   "http://localhost:3000",
+  "https://www.veryfit.fr",
   "https://veryfit.onrender.com",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      console.log("🌐 Requête entrante depuis :", origin);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.warn("⛔ CORS refusé pour :", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -45,13 +46,13 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Logger
+// ✅ Logger simple
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.originalUrl}`);
   next();
 });
 
-// ✅ Routes API
+// ✅ Routes protégées (avec token)
 app.use("/api/orders", verifyToken, ordersRoutes);
 app.use("/api/dossiers", dossierRoutes);
 app.use("/api/documents", documentRoutes);
@@ -60,19 +61,21 @@ app.use("/api/generate", generateRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationsRoutes);
 
-// ⛔️ NE PAS METTRE verifyToken ici : les custom claims ne sont pas encore présents au moment de la requête
+// ⛔ Pas de token ici : claims ne sont pas encore présents
 app.use("/api/custom-claims", customClaimsRoutes);
 
+// ✅ Uploads publics
 app.use("/", uploadRoutes);
 
 // ✅ Fichiers statiques
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ Fallback
+// 🔻 Fallback route
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route non trouvée" });
 });
 
+// ✅ Lancement
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Serveur lancé sur le port ${PORT}`);
