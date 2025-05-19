@@ -13,7 +13,7 @@ router.post("/setCustomClaims", async (req, res) => {
   try {
     const normalizedRole = role.toLowerCase();
 
-    // 🔐 1. Set les custom claims
+    // 🔐 1. Set les custom claims test 
     await admin.auth().setCustomUserClaims(uid, {
       role: normalizedRole,
       isApproved: !!isApproved,
