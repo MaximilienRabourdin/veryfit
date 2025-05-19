@@ -16,6 +16,7 @@ const userRoutes = require("./routes/users");
 const customClaimsRoutes = require("./routes/customClaims");
 const notificationsRoutes = require("./routes/notifications");
 
+
 const app = express();
 console.log("🚀 Server init...");
 

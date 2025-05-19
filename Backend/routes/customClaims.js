@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { admin, db } = require("../config/firebaseAdmin");
 
+// 🔹 SET custom claims + mise à jour Firestore
 router.post("/setCustomClaims", async (req, res) => {
   const { uid, role, isApproved } = req.body;
 
@@ -32,6 +33,20 @@ router.post("/setCustomClaims", async (req, res) => {
   } catch (error) {
     console.error("❌ Erreur setCustomClaims:", error);
     return res.status(500).json({ error: "Erreur serveur claims." });
+  }
+});
+
+// 🔎 GET des claims actuels pour un UID donné
+router.get("/getClaims/:uid", async (req, res) => {
+  const { uid } = req.params;
+
+  try {
+    const userRecord = await admin.auth().getUser(uid);
+    const claims = userRecord.customClaims || {};
+    return res.status(200).json({ success: true, uid, claims });
+  } catch (error) {
+    console.error("❌ Erreur getClaims:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 
