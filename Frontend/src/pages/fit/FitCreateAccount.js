@@ -78,11 +78,11 @@ const FitCreateAccount = () => {
         throw new Error("Cet email est déjà utilisé. Veuillez vous connecter.");
       }
 
-      // 🔐 Création compte Firebase
+      // 🔐 Création de l'utilisateur
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       console.log("✅ Utilisateur créé :", user.uid);
 
-      // 🔎 Sauvegarde dans Firestore
+      // 📄 Enregistrement dans Firestore
       await setDoc(doc(db, "users_webapp", user.uid), {
         email,
         role,
@@ -99,10 +99,9 @@ const FitCreateAccount = () => {
         isApproved: true,
         createdAt: new Date().toISOString(),
       });
-
       console.log("✅ Données enregistrées dans Firestore");
 
-      // 🔁 Rafraîchissement du token avec retry
+      // 🔁 Attente active de la propagation des custom claims
       let attempts = 0;
       let roleClaim;
       while (attempts < 5) {
@@ -112,7 +111,7 @@ const FitCreateAccount = () => {
           console.log("✅ Rôle détecté après", attempts + 1, "essai(s) :", roleClaim);
           break;
         }
-        console.log("🔄 Claims non encore dispos, retry dans 1s...");
+        console.log("🔄 Claims non encore disponibles, nouvelle tentative dans 1s...");
         await new Promise((res) => setTimeout(res, 1000));
         attempts++;
       }
@@ -188,78 +187,16 @@ const FitCreateAccount = () => {
             <option value="Carrossier">Carrossier</option>
             <option value="Utilisateur">Utilisateur</option>
           </select>
-          <input
-            name="Nom"
-            placeholder="Nom*"
-            value={formData.Nom}
-            onChange={handleChange}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            name="Prenom"
-            placeholder="Prénom*"
-            value={formData.Prenom}
-            onChange={handleChange}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            name="Numero"
-            placeholder="Numéro"
-            value={formData.Numero}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="NumeroAdherent"
-            placeholder="Numéro Adhérent"
-            value={formData.NumeroAdherent}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="CodePostal"
-            placeholder="Code Postal"
-            value={formData.CodePostal}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="CodeVendeur"
-            placeholder="Code Vendeur"
-            value={formData.CodeVendeur}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="Contact"
-            placeholder="Contact"
-            value={formData.Contact}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="Pays"
-            placeholder="Pays"
-            value={formData.Pays}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="CodePaysRegion"
-            placeholder="Code Pays/Region"
-            value={formData.CodePaysRegion}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="Telephone"
-            placeholder="Téléphone"
-            value={formData.Telephone}
-            onChange={handleChange}
-            className="border p-2 rounded"
-          />
+          <input name="Nom" placeholder="Nom*" value={formData.Nom} onChange={handleChange} className="border p-2 rounded" required />
+          <input name="Prenom" placeholder="Prénom*" value={formData.Prenom} onChange={handleChange} className="border p-2 rounded" required />
+          <input name="Numero" placeholder="Numéro" value={formData.Numero} onChange={handleChange} className="border p-2 rounded" />
+          <input name="NumeroAdherent" placeholder="Numéro Adhérent" value={formData.NumeroAdherent} onChange={handleChange} className="border p-2 rounded" />
+          <input name="CodePostal" placeholder="Code Postal" value={formData.CodePostal} onChange={handleChange} className="border p-2 rounded" />
+          <input name="CodeVendeur" placeholder="Code Vendeur" value={formData.CodeVendeur} onChange={handleChange} className="border p-2 rounded" />
+          <input name="Contact" placeholder="Contact" value={formData.Contact} onChange={handleChange} className="border p-2 rounded" />
+          <input name="Pays" placeholder="Pays" value={formData.Pays} onChange={handleChange} className="border p-2 rounded" />
+          <input name="CodePaysRegion" placeholder="Code Pays/Region" value={formData.CodePaysRegion} onChange={handleChange} className="border p-2 rounded" />
+          <input name="Telephone" placeholder="Téléphone" value={formData.Telephone} onChange={handleChange} className="border p-2 rounded" />
         </div>
 
         <button
