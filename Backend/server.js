@@ -23,6 +23,8 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://www.veryfit.fr",
   "https://veryfit.onrender.com", // à retirer si non utile
+  "null" // ← AJOUTE CETTE LIGNE
+
 ];
 
 app.use(
