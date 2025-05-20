@@ -44,73 +44,34 @@ const FitCreateAccount = () => {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       console.log("✅ Utilisateur créé :", user.uid);
 
+      // Stocker les données utilisateur dans Firestore, y compris role et isApproved
       await setDoc(doc(db, "users_webapp", user.uid), {
-        email, role, Nom, Prenom, Numero, NumeroAdherent,
-        CodePostal, CodeVendeur, Contact, Pays, CodePaysRegion, Telephone,
-        isApproved: true, createdAt: new Date().toISOString(),
+        email, 
+        role: role.toLowerCase(), // Stocker le rôle en minuscules pour cohérence
+        Nom, 
+        Prenom, 
+        Numero, 
+        NumeroAdherent,
+        CodePostal, 
+        CodeVendeur, 
+        Contact, 
+        Pays, 
+        CodePaysRegion, 
+        Telephone,
+        isApproved: true, 
+        createdAt: new Date().toISOString(),
       });
 
-      const idToken = await user.getIdToken();
+      console.log("💾 Données utilisateur et rôle enregistrés dans Firestore");
+      console.log("👋 Contournement de l'appel API, le rôle est déjà enregistré dans Firestore");
 
-      console.log("📤 Envoi des claims à l'API...");
-      try {
-        const response = await fetch("https://veryfit-backend.onrender.com/api/custom-claims/setCustomClaims", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${idToken}`,
-            "X-Requested-With": "XMLHttpRequest"
-          },
-          mode: "cors",
-          body: JSON.stringify({ 
-            uid: user.uid, 
-            role: role.toLowerCase(), 
-            isApproved: true 
-          }),
-        });
-        
-        if (!response.ok) {
-          console.error("❌ Erreur API:", response.status, response.statusText);
-          const errorData = await response.text();
-          console.error("Détails:", errorData);
-          throw new Error(`Erreur lors de la définition des claims (${response.status})`);
-        } else {
-          console.log("✅ API success:", response.status);
-          const data = await response.json();
-          console.log("📤 Réponse API:", data);
-        }
-      } catch (err) {
-        console.error("❌ Erreur fetch:", err);
-        // Continuer malgré l'erreur - on ne veut pas que l'utilisateur soit bloqué
-        // même si les claims ne sont pas définis
-      }
-
-      // ✅ Patch : on force le logout/login pour recharger les claims immédiatement
+      // ✅ Patch : on force le logout/login pour recharger la session utilisateur
       await signOut(auth);
       await new Promise((res) => setTimeout(res, 500));
       const reauth = await signInWithEmailAndPassword(auth, email, password);
-      console.log("🔁 Reconnecté pour recharger les claims :", reauth.user.uid);
+      console.log("🔁 Reconnecté pour recharger la session :", reauth.user.uid);
 
-      // 🔁 Retry pour récupérer les claims
-      let claimsOk = false;
-      for (let i = 0; i < 5; i++) {
-        const refreshed = await reauth.user.getIdTokenResult(true);
-        if (refreshed.claims?.role) {
-          console.log(`✅ Claims récupérés au retry ${i + 1} :`, refreshed.claims);
-          claimsOk = true;
-          break;
-        }
-        console.log(`🔁 Retry ${i + 1}/5 - claims :`, refreshed.claims);
-        await new Promise(res => setTimeout(res, 1000));
-      }
-
-      if (!claimsOk) {
-        console.warn("⚠️ Impossible de récupérer les claims Firebase, mais l'utilisateur a été créé.");
-        setMessage("✅ Compte créé avec succès ! La synchronisation des permissions peut prendre quelques minutes.");
-      } else {
-        setMessage("✅ Compte créé avec succès !");
-      }
-      
+      setMessage("✅ Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
       setFormData({
         email: "", password: "", role: "", Nom: "", Prenom: "",
         Numero: "", NumeroAdherent: "", CodePostal: "",
