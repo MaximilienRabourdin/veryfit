@@ -47,7 +47,7 @@ const FitCreateAccount = () => {
       // Stocker les données utilisateur dans Firestore, y compris role et isApproved
       await setDoc(doc(db, "users_webapp", user.uid), {
         email, 
-        role: role.toLowerCase(), // Stocker le rôle en minuscules pour cohérence
+        role: role, // Stocker le rôle en minuscules pour cohérence
         Nom, 
         Prenom, 
         Numero, 
