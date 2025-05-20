@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -53,14 +52,24 @@ const FitCreateAccount = () => {
 
       const idToken = await user.getIdToken();
 
-      await fetch("https://veryfit-backend.onrender.com/api/custom-claims/setCustomClaims", {
+      // Modification ici: ajout du mode 'cors' explicite pour la requête fetch
+      console.log("📤 Envoi des claims à l'API...");
+      const response = await fetch("https://veryfit-backend.onrender.com/api/custom-claims/setCustomClaims", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
         },
+        mode: 'cors', // Spécifier explicitement le mode CORS
         body: JSON.stringify({ uid: user.uid, role: role.toLowerCase(), isApproved: true }),
       });
+      
+      if (!response.ok) {
+        console.error("❌ Erreur API:", response.status, response.statusText);
+        const errorData = await response.text();
+        console.error("Détails:", errorData);
+        throw new Error(`Erreur lors de la définition des claims (${response.status})`);
+      }
 
       // ✅ Patch : on force le logout/login pour recharger les claims immédiatement
       await signOut(auth);
