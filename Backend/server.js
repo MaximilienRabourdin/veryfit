@@ -5,18 +5,37 @@ const cors = require("cors");
 
 const app = express();
 
-// ⚠️ SOLUTION D'URGENCE CORS - Ajouter ce middleware en premier
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+// =============================================
+// SOLUTION CORS ULTIME - MIDDLEWARE PRIORITAIRE
+// =============================================
+console.log('⚠️ SOLUTION CORS ULTIME ACTIVÉE');
+app.use(function(req, res, next) {
+  // Autorise TOUTES les origines sans exception
+  res.header("Access-Control-Allow-Origin", "*");
+  // Autorise tous les en-têtes
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  // Autorise toutes les méthodes
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  // Permet d'inclure les cookies
+  res.header("Access-Control-Allow-Credentials", "true");
   
+  // Gestion spéciale des requêtes OPTIONS (préflight)
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
+    console.log('🔍 Requête OPTIONS interceptée pour:', req.originalUrl);
+    return res.status(200).send();
   }
+  
   next();
 });
-console.log('⚠️ CORS BYPASS ACTIVÉ - TOUTES LES ORIGINES SONT AUTORISÉES');
+
+// Middleware OPTIONS spécifique pour la route problématique
+app.options('/api/custom-claims/setCustomClaims', (req, res) => {
+  console.log('🚨 OPTIONS spécifique pour /api/custom-claims/setCustomClaims');
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.sendStatus(200);
+});
 
 // Important! N'importer que depuis firebaseAdmin.js, qui importe déjà firebase.config.js
 const { admin, db, storage, verifyToken } = require("./config/firebaseAdmin");
@@ -32,54 +51,18 @@ const userRoutes = require("./routes/users");
 const customClaimsRoutes = require("./routes/customClaims");
 const notificationsRoutes = require("./routes/notifications");
 
-// CORS setup - Configuration normale
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://localhost:8080",
-  "https://www.veryfit.fr",
-  "https://veryfit.onrender.com",
-  "https://veryfit-frontend.onrender.com",
-  "null",
-];
-
-// Configuration CORS principale
+// Configuration CORS standard (désactivée car nous utilisons la solution d'urgence)
+/*
 app.use(
   cors({
-    origin: function (origin, callback) {
-      console.log("🌐 Requête entrante depuis :", origin);
-      // Autoriser les requêtes sans origine (comme Postman)
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn("⛔ CORS refusé pour :", origin);
-        // En développement ou sur Render, autoriser toutes les origines
-        if (
-          process.env.NODE_ENV === "development" ||
-          process.env.ALLOW_ALL_ORIGINS === "true"
-        ) {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }
-      }
-    },
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true,
     maxAge: 86400, // 24 heures
   })
 );
-
-// Réponse aux requêtes OPTIONS (très important)
-app.options("*", (req, res) => {
-  console.log("🌐 Global OPTIONS handler hit");
-  res.sendStatus(204);
-});
+*/
 
 // Route de test CORS spécifique
 app.get("/api/test", (req, res) => {
@@ -90,7 +73,7 @@ app.get("/api/test", (req, res) => {
   });
 });
 
-// Route spécifique pour le problème que vous rencontrez
+// Route spécifique pour tester les claims
 app.get("/api/custom-claims/getClaims/:uid", (req, res) => {
   const uid = req.params.uid;
   console.log(`🔍 Récupération des claims pour l'utilisateur: ${uid}`);
@@ -103,7 +86,7 @@ app.get("/api/custom-claims/getClaims/:uid", (req, res) => {
   });
 });
 
-// Middlewares essentiels - APRÈS CORS, mais AVANT les routes
+// Middlewares essentiels
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

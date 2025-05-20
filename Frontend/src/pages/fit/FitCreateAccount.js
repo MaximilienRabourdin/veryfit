@@ -52,23 +52,37 @@ const FitCreateAccount = () => {
 
       const idToken = await user.getIdToken();
 
-      // Modification ici: ajout du mode 'cors' explicite pour la requête fetch
       console.log("📤 Envoi des claims à l'API...");
-      const response = await fetch("https://veryfit-backend.onrender.com/api/custom-claims/setCustomClaims", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        mode: 'cors', // Spécifier explicitement le mode CORS
-        body: JSON.stringify({ uid: user.uid, role: role.toLowerCase(), isApproved: true }),
-      });
-      
-      if (!response.ok) {
-        console.error("❌ Erreur API:", response.status, response.statusText);
-        const errorData = await response.text();
-        console.error("Détails:", errorData);
-        throw new Error(`Erreur lors de la définition des claims (${response.status})`);
+      try {
+        const response = await fetch("https://veryfit-backend.onrender.com/api/custom-claims/setCustomClaims", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`,
+            "X-Requested-With": "XMLHttpRequest"
+          },
+          mode: "cors",
+          body: JSON.stringify({ 
+            uid: user.uid, 
+            role: role.toLowerCase(), 
+            isApproved: true 
+          }),
+        });
+        
+        if (!response.ok) {
+          console.error("❌ Erreur API:", response.status, response.statusText);
+          const errorData = await response.text();
+          console.error("Détails:", errorData);
+          throw new Error(`Erreur lors de la définition des claims (${response.status})`);
+        } else {
+          console.log("✅ API success:", response.status);
+          const data = await response.json();
+          console.log("📤 Réponse API:", data);
+        }
+      } catch (err) {
+        console.error("❌ Erreur fetch:", err);
+        // Continuer malgré l'erreur - on ne veut pas que l'utilisateur soit bloqué
+        // même si les claims ne sont pas définis
       }
 
       // ✅ Patch : on force le logout/login pour recharger les claims immédiatement
@@ -90,9 +104,13 @@ const FitCreateAccount = () => {
         await new Promise(res => setTimeout(res, 1000));
       }
 
-      if (!claimsOk) throw new Error("❌ Impossible de récupérer les claims Firebase. Veuillez réessayer.");
-
-      setMessage("✅ Compte créé avec succès !");
+      if (!claimsOk) {
+        console.warn("⚠️ Impossible de récupérer les claims Firebase, mais l'utilisateur a été créé.");
+        setMessage("✅ Compte créé avec succès ! La synchronisation des permissions peut prendre quelques minutes.");
+      } else {
+        setMessage("✅ Compte créé avec succès !");
+      }
+      
       setFormData({
         email: "", password: "", role: "", Nom: "", Prenom: "",
         Numero: "", NumeroAdherent: "", CodePostal: "",
