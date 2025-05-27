@@ -1,6 +1,10 @@
 // pages/Login.js
 import React, { useEffect, useState } from "react";
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebaseConfig";
 import logo from "../medias/logo_fit.png";
@@ -9,20 +13,17 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [connectedUser, setConnectedUser] = useState(null);
   const navigate = useNavigate();
 
+  // 🔐 Sécurité : déconnexion auto si un utilisateur est connecté
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setConnectedUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await signOut(auth);
+      }
     });
     return () => unsubscribe();
   }, []);
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    setConnectedUser(null);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,82 +80,46 @@ const Login = () => {
             </p>
           </div>
 
-          {/* ✅ Si connecté, on propose Accès ou Changement */}
-          {connectedUser && (
-            <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-700 p-4 mb-6">
-              <p>
-                Vous êtes déjà connecté. Vous pouvez accéder à votre espace ou changer de compte.
-              </p>
-              <div className="flex gap-4 mt-3">
-                <button
-                  onClick={() => {
-                    connectedUser.getIdTokenResult().then((token) => {
-                      const role = token.claims.role?.toLowerCase();
-                      const paths = {
-                        "super admin": "/fit/dashboard",
-                        revendeur: "/revendeur/dashboard",
-                        carrossier: "/carrossier/dashboard",
-                        utilisateur: "/client/dashboard",
-                      };
-                      const path = paths[role];
-                      if (path) navigate(path);
-                    });
-                  }}
-                  className="bg-green-600 text-white px-4 py-2 rounded"
-                >
-                  Accéder à mon espace
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="bg-gray-300 text-gray-800 px-4 py-2 rounded"
-                >
-                  Changer de compte
-                </button>
-              </div>
+          {/* Formulaire de connexion */}
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label htmlFor="email" className="block text-sm font-medium mb-2">
+                Adresse email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                required
+              />
             </div>
-          )}
-
-          {/* Formulaire de login */}
-          {!connectedUser && (
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-medium mb-2">
-                  Adresse email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="password" className="block text-sm font-medium mb-2">
-                  Mot de passe
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                  required
-                />
-              </div>
-              {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
-              <button
-                type="submit"
-                className="w-full font-bold bg-red-600 text-white py-2 rounded-sm hover:bg-red-700 transition"
-              >
-                Se connecter
-              </button>
-            </form>
-          )}
+            <div className="mb-4">
+              <label htmlFor="password" className="block text-sm font-medium mb-2">
+                Mot de passe
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                required
+              />
+            </div>
+            {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+            <button
+              type="submit"
+              className="w-full font-bold bg-red-600 text-white py-2 rounded-sm hover:bg-red-700 transition"
+            >
+              Se connecter
+            </button>
+          </form>
         </div>
       </div>
 
+      {/* Visuel droite */}
       <div className="hidden md:flex w-full md:w-1/2 bg-login bg-cover bg-center relative">
         <div className="z-10 text-white p-16 flex justify-start flex-col items-start">
           <h2 className="text-2xl md:text-3xl font-extrabold leading-tight tracking-wide">
