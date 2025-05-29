@@ -24,6 +24,21 @@ const FitCreateAccount = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const setCustomClaims = async (uid, role) => {
+    try {
+      const response = await fetch("https://veryfit-backend.onrender.com/api/custom-claims/setCustomClaims", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid, role, isApproved: true }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Erreur lors de la mise à jour des claims.");
+      console.log("✅ Claims appliqués côté backend");
+    } catch (error) {
+      console.error("❌ Erreur lors de l’appel à setCustomClaims:", error.message);
+    }
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
@@ -44,28 +59,26 @@ const FitCreateAccount = () => {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       console.log("✅ Utilisateur créé :", user.uid);
 
-      // Stocker les données utilisateur dans Firestore, y compris role et isApproved
       await setDoc(doc(db, "users_webapp", user.uid), {
-        email, 
-        role: role, // Stocker le rôle en minuscules pour cohérence
-        Nom, 
-        Prenom, 
-        Numero, 
+        email,
+        role,
+        Nom,
+        Prenom,
+        Numero,
         NumeroAdherent,
-        CodePostal, 
-        CodeVendeur, 
-        Contact, 
-        Pays, 
-        CodePaysRegion, 
+        CodePostal,
+        CodeVendeur,
+        Contact,
+        Pays,
+        CodePaysRegion,
         Telephone,
-        isApproved: true, 
+        isApproved: true,
         createdAt: new Date().toISOString(),
       });
 
-      console.log("💾 Données utilisateur et rôle enregistrés dans Firestore");
-      console.log("👋 Contournement de l'appel API, le rôle est déjà enregistré dans Firestore");
+      await setCustomClaims(user.uid, role); // 🔥 Applique immédiatement le rôle et l'approbation
 
-      // ✅ Patch : on force le logout/login pour recharger la session utilisateur
+      // ✅ Patch : force la reconnexion pour recharger les claims
       await signOut(auth);
       await new Promise((res) => setTimeout(res, 500));
       const reauth = await signInWithEmailAndPassword(auth, email, password);

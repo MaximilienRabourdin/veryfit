@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../../firebaseConfig";
+import { db, auth } from "../../firebaseConfig";
 import {
   collection,
   onSnapshot,
@@ -7,8 +7,6 @@ import {
   orderBy,
   doc,
   deleteDoc,
-  deleteField,
-  updateDoc,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
@@ -23,6 +21,7 @@ import {
 } from "react-icons/fa";
 
 const FitDashboard = () => {
+  const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -31,7 +30,18 @@ const FitDashboard = () => {
 
   const navigate = useNavigate();
 
+  // 1. Auth listener
   useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((u) => {
+      setUser(u);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 2. Firestore listeners (uniquement si user)
+  useEffect(() => {
+    if (!user) return;
+
     const unsubscribeDossiers = onSnapshot(
       query(collection(db, "dossiers"), orderBy("createdAt", "desc")),
       (snapshot) => {
@@ -62,12 +72,13 @@ const FitDashboard = () => {
       unsubscribeDossiers();
       unsubscribeNotifications();
     };
-  }, []);
+  }, [user]);
+
+  // 3. Si pas encore d'utilisateur, ne pas exécuter la suite
+  if (!user) return <div className="p-6">Chargement de l'utilisateur...</div>;
 
   const handleDeleteDossier = async (dossierId) => {
-    const confirm = window.confirm(
-      "❗️Êtes-vous sûr de vouloir supprimer ce dossier ?"
-    );
+    const confirm = window.confirm("❗️Êtes-vous sûr de vouloir supprimer ce dossier ?");
     if (!confirm) return;
 
     try {
@@ -89,7 +100,6 @@ const FitDashboard = () => {
 
   const countDocumentsCompletes = (order) => {
     let count = 0;
-
     if (order.produits && Array.isArray(order.produits)) {
       count += order.produits.reduce((acc, produit) => {
         let c = 0;
@@ -99,11 +109,9 @@ const FitDashboard = () => {
         return acc + c;
       }, 0);
     }
-
     if (order.declarationMontageCarrossierPdf) {
       count += 1;
     }
-
     return count;
   };
 
@@ -189,7 +197,6 @@ const FitDashboard = () => {
         <div className="lg:col-span-2">
           <div className="bg-white shadow-md p-4 rounded mb-6 overflow-hidden">
             <h2 className="text-xl font-bold mb-4">Derniers dossiers CE</h2>
-
             <input
               type="text"
               placeholder="Rechercher un dossier ou un email..."
@@ -197,7 +204,6 @@ const FitDashboard = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="mb-4 w-full border p-2 rounded"
             />
-
             <div className="overflow-y-auto max-h-[400px]">
               <table className="w-full text-sm border-collapse">
                 <thead className="bg-gray-100 sticky top-0 z-10">
@@ -247,7 +253,6 @@ const FitDashboard = () => {
                   ))}
                 </tbody>
               </table>
-
               {filteredOrders.length === 0 && (
                 <p className="text-center py-4 text-gray-500">
                   Aucun dossier trouvé.
@@ -261,27 +266,26 @@ const FitDashboard = () => {
           <h2 className="text-lg font-bold mb-4">Calendrier</h2>
           <Calendar onChange={setDate} value={date} />
           <div className="mt-4">
-  <h3 className="font-bold text-sm text-gray-600 mb-2">📆 Rappels à venir</h3>
-  <ul className="text-sm space-y-1">
-    {orders
-      .filter(order => order.controlePeriodiqueDate)
-      .filter(order => {
-        const target = new Date(order.controlePeriodiqueDate.seconds * 1000);
-        return target >= new Date();
-      })
-      .sort((a, b) => a.controlePeriodiqueDate.seconds - b.controlePeriodiqueDate.seconds)
-      .slice(0, 5)
-      .map(order => {
-        const date = new Date(order.controlePeriodiqueDate.seconds * 1000).toLocaleDateString();
-        return (
-          <li key={order.id}>
-            📄 {order.orderName} – <span className="text-gray-500">{date}</span>
-          </li>
-        );
-      })}
-  </ul>
-</div>
-
+            <h3 className="font-bold text-sm text-gray-600 mb-2">📆 Rappels à venir</h3>
+            <ul className="text-sm space-y-1">
+              {orders
+                .filter(order => order.controlePeriodiqueDate)
+                .filter(order => {
+                  const target = new Date(order.controlePeriodiqueDate.seconds * 1000);
+                  return target >= new Date();
+                })
+                .sort((a, b) => a.controlePeriodiqueDate.seconds - b.controlePeriodiqueDate.seconds)
+                .slice(0, 5)
+                .map(order => {
+                  const date = new Date(order.controlePeriodiqueDate.seconds * 1000).toLocaleDateString();
+                  return (
+                    <li key={order.id}>
+                      📄 {order.orderName} – <span className="text-gray-500">{date}</span>
+                    </li>
+                  );
+                })}
+            </ul>
+          </div>
         </div>
       </div>
     </div>

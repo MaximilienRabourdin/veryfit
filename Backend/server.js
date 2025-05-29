@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
+const { testFirebaseConnection } = require("./config/firebaseAdmin");
+
 
 const app = express();
 
@@ -63,6 +65,64 @@ app.use(
   })
 );
 */
+
+app.get("/api/test-firebase", async (req, res) => {
+  try {
+    console.log("🧪 Test Firebase demandé...");
+    const result = await testFirebaseConnection();
+    res.json(result);
+  } catch (error) {
+    console.error("❌ Test Firebase échoué:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      details: "Vérifiez les logs serveur pour plus de détails"
+    });
+  }
+});
+
+// Route de test simple Firestore
+app.get("/api/test-firestore", async (req, res) => {
+  try {
+    console.log("🔥 Test Firestore simple...");
+    
+    const testDoc = {
+      timestamp: new Date(),
+      message: "Test de connexion",
+      random: Math.random()
+    };
+    
+    // Écriture
+    await db.collection("test").doc("simple-test").set(testDoc);
+    console.log("✅ Écriture Firestore réussie");
+    
+    // Lecture
+    const doc = await db.collection("test").doc("simple-test").get();
+    if (doc.exists) {
+      console.log("✅ Lecture Firestore réussie");
+      const data = doc.data();
+      
+      // Nettoyage
+      await db.collection("test").doc("simple-test").delete();
+      
+      res.json({ 
+        success: true, 
+        message: "Firestore fonctionne parfaitement",
+        testData: data
+      });
+    } else {
+      throw new Error("Document non trouvé après création");
+    }
+    
+  } catch (error) {
+    console.error("❌ Test Firestore simple échoué:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      code: error.code || "UNKNOWN"
+    });
+  }
+});
 
 // Route de test CORS spécifique
 app.get("/api/test", (req, res) => {

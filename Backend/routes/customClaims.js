@@ -44,25 +44,31 @@ router.post("/setCustomClaims", async (req, res) => {
   }
 
   try {
-    const normalizedRole = role.toLowerCase();
-
-    // 🔐 1. Set les custom claims test 
+    // ✅ CORRECTION : Garder le rôle tel quel (avec majuscules)
+    const finalRole = role; // Pas de toLowerCase() !
+    
+    // 🔐 1. Set les custom claims
     await admin.auth().setCustomUserClaims(uid, {
-      role: normalizedRole,
-      isApproved: !!isApproved,
+      role: finalRole,
+      isApproved: Boolean(isApproved), // ✅ Conversion explicite en boolean
     });
 
-    // 🗃️ 2. Firestore update (merge)
+    // 🗃️ 2. Firestore update (merge) - Garder aussi les majuscules
     await db.collection("users_webapp").doc(uid).set({
-      role: normalizedRole,
-      isApproved: true,
+      role: finalRole, // ✅ Cohérence avec les claims
+      isApproved: Boolean(isApproved),
     }, { merge: true });
 
     // ✅ 3. Vérification immédiate des claims
     const user = await admin.auth().getUser(uid);
-    console.log("✅ Claims actuels : ", user.customClaims);
+    console.log("✅ Claims actuels:", user.customClaims);
+    console.log("✅ isApproved type:", typeof user.customClaims?.isApproved);
 
-    return res.status(200).json({ message: "Claims mis à jour." });
+    return res.status(200).json({ 
+      success: true,
+      message: "Claims mis à jour.",
+      appliedClaims: user.customClaims
+    });
   } catch (error) {
     console.error("❌ Erreur setCustomClaims:", error);
     return res.status(500).json({ error: "Erreur serveur claims." });

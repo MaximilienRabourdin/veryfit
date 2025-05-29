@@ -13,56 +13,75 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const navigate = useNavigate();
 
   // 🔐 Sécurité : déconnexion auto si un utilisateur est connecté
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
+      if (user && !isLoggingIn) {
+        console.log("🔄 Utilisateur déjà connecté, déconnexion...");
         await signOut(auth);
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [isLoggingIn]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoggingIn(true);
 
     try {
+      console.log("🔄 Tentative de connexion...");
       const { user } = await signInWithEmailAndPassword(auth, email, password);
+      
+      console.log("✅ Connexion Firebase réussie");
+      
+      // Attendre que le token soit prêt
       await user.getIdToken(true);
       const token = await user.getIdTokenResult();
       const { role, isApproved } = token.claims;
 
-      if (!isApproved) {
-        setError("Votre compte est en attente de validation.");
+      console.log("🔍 DEBUG COMPLET - Connexion:");
+      console.log("👤 UID:", user.uid);
+      console.log("📧 Email:", user.email);
+      console.log("🎯 Rôle détecté:", role);
+      console.log("✅ Approuvé:", isApproved);
+      console.log("🏷️ Type de isApproved:", typeof isApproved);
+      console.log("📋 Tous les claims:", JSON.stringify(token.claims, null, 2));
+      console.log("🔍 Comparaison: isApproved === true ?", isApproved === true);
+      console.log("🔍 Comparaison: isApproved == true ?", isApproved == true);
+      console.log("🔍 Comparaison: Boolean(isApproved) ?", Boolean(isApproved));
+
+      // Si pas de custom claims, utiliser AuthWrapper qui va fallback sur Firestore
+      if (!role || isApproved === undefined) {
+        console.warn("⚠️ Pas de custom claims détectés, AuthWrapper va gérer via Firestore");
+        
+        // Stockage des informations de base
+        const userId = token.claims.user_id || user.uid;
+        localStorage.setItem("userId", userId);
+        localStorage.setItem("idToken", token.token);
+        
+        console.log("✅ Connexion réussie, AuthWrapper va gérer la redirection...");
+        // Laisser AuthWrapper gérer tout
         return;
       }
 
+      // Stockage des informations
       const userId = token.claims.user_id || user.uid;
       localStorage.setItem("userId", userId);
       localStorage.setItem("idToken", token.token);
 
-      switch (role.toLowerCase()) {
-        case "super admin":
-          navigate("/fit/dashboard");
-          break;
-        case "revendeur":
-          navigate("/revendeur/dashboard");
-          break;
-        case "carrossier":
-          navigate("/carrossier/dashboard");
-          break;
-        case "utilisateur":
-          navigate("/client/dashboard");
-          break;
-        default:
-          setError("Rôle utilisateur inconnu.");
-      }
+      console.log("✅ Connexion réussie, AuthWrapper va gérer la redirection...");
+      
+      // Laisser AuthWrapper gérer la redirection
+      // setIsLoggingIn restera à true jusqu'à la redirection
+      
     } catch (err) {
-      console.error("Erreur lors de la connexion :", err);
+      console.error("❌ Erreur lors de la connexion :", err);
       setError("Email ou mot de passe incorrect.");
+      setIsLoggingIn(false);
     }
   };
 
@@ -93,6 +112,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 required
+                disabled={isLoggingIn}
               />
             </div>
             <div className="mb-4">
@@ -106,14 +126,16 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 required
+                disabled={isLoggingIn}
               />
             </div>
             {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
             <button
               type="submit"
-              className="w-full font-bold bg-red-600 text-white py-2 rounded-sm hover:bg-red-700 transition"
+              disabled={isLoggingIn}
+              className="w-full font-bold bg-red-600 text-white py-2 rounded-sm hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Se connecter
+              {isLoggingIn ? "Connexion en cours..." : "Se connecter"}
             </button>
           </form>
         </div>
