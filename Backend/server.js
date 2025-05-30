@@ -1,4 +1,5 @@
 require("dotenv").config();
+require('./schedulers/controlesScheduler');
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -10,7 +11,6 @@ const app = express();
 // =============================================
 // SOLUTION CORS ULTIME - MIDDLEWARE PRIORITAIRE
 // =============================================
-console.log('⚠️ SOLUTION CORS ULTIME ACTIVÉE');
 app.use(function(req, res, next) {
   // Autorise TOUTES les origines sans exception
   res.header("Access-Control-Allow-Origin", "*");

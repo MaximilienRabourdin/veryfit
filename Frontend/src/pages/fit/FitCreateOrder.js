@@ -10,6 +10,7 @@ const FitCreateOrder = () => {
   const [carrossiers, setCarrossiers] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedRevendeur, setSelectedRevendeur] = useState("");
+  const [selectedDestinataire, setSelectedDestinataire] = useState(null);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [orderName, setOrderName] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
@@ -93,6 +94,81 @@ const FitCreateOrder = () => {
       setServiceDate(newDate.toISOString().split("T")[0]);
     }
   }, [deliveryDate]);
+
+  // 🔹 Fonction pour obtenir les documents selon le destinataire
+  const getDocumentsForDestinataire = (destinataireType) => {
+    if (!destinataireType) return [];
+    
+    const roleNormalized = destinataireType.toLowerCase();
+    
+    if (roleNormalized === 'carrossier') {
+      return [
+        { 
+          key: 'controleMontage', 
+          label: 'Contrôle de Montage et Mise en Service', 
+          required: true, 
+          description: 'À remplir, signer et envoyer à FIT',
+          icon: '✍️'
+        },
+        { 
+          key: 'declarationCE', 
+          label: 'Déclaration de Conformité CE', 
+          required: true, 
+          readOnly: true,
+          description: 'PDF fourni par FIT',
+          icon: '📄'
+        },
+        { 
+          key: 'noticeInstruction', 
+          label: 'Notice d\'Instruction', 
+          required: true,
+          description: 'Disponible sur Google Drive',
+          icon: '🔗'
+        }
+      ];
+    } else if (roleNormalized === 'revendeur') {
+      return [
+        { 
+          key: 'controlePeriodique', 
+          label: 'Contrôle Périodique', 
+          required: true,
+          description: 'À effectuer 6 mois après création du dossier',
+          icon: '🔍'
+        },
+        { 
+          key: 'noticeInstruction', 
+          label: 'Notice d\'Instruction', 
+          required: true,
+          description: 'Disponible sur Google Drive',
+          icon: '🔗'
+        }
+      ];
+    }
+    return [];
+  };
+
+  // 🔹 Mise à jour du destinataire sélectionné
+  const handleDestinataireChange = (userId) => {
+    setSelectedRevendeur(userId);
+    
+    const destinataire = [...revendeurs, ...carrossiers].find((u) => u.id === userId);
+    setSelectedDestinataire(destinataire);
+    
+    // Mettre à jour les documents des produits existants
+    const documentsDisponibles = getDocumentsForDestinataire(destinataire?.role);
+    const newDocumentsChoisis = {};
+    
+    documentsDisponibles.forEach(doc => {
+      newDocumentsChoisis[doc.key] = doc.required;
+    });
+    
+    setSelectedProducts(prevProducts => 
+      prevProducts.map(product => ({
+        ...product,
+        documentsChoisis: newDocumentsChoisis
+      }))
+    );
+  };
 
   const handleCreateOrder = async (e) => {
     e.preventDefault();
@@ -243,6 +319,7 @@ const FitCreateOrder = () => {
   const resetForm = () => {
     setOrderName("");
     setSelectedRevendeur("");
+    setSelectedDestinataire(null);
     setSelectedProducts([]);
     setDeliveryDate("");
     setServiceDate("");
@@ -251,18 +328,21 @@ const FitCreateOrder = () => {
   };
 
   const addProduct = () => {
-    setSelectedProducts([
-      ...selectedProducts,
+    // Documents basés sur le destinataire sélectionné
+    const documentsDisponibles = getDocumentsForDestinataire(selectedDestinataire?.role);
+    const newDocumentsChoisis = {};
+    
+    documentsDisponibles.forEach(doc => {
+      newDocumentsChoisis[doc.key] = doc.required;
+    });
+
+    setSelectedProducts(prevProducts => [
+      ...prevProducts,
       {
         productId: "",
         quantity: 1,
         file: null,
-        documentsChoisis: {
-          declarationCE: true,
-          declarationMontage: true,
-          controlePeriodique: true,
-          noticeInstruction: true,
-        },
+        documentsChoisis: newDocumentsChoisis,
       },
     ]);
   };
@@ -364,7 +444,7 @@ const FitCreateOrder = () => {
           />
           <select 
             value={selectedRevendeur} 
-            onChange={(e) => setSelectedRevendeur(e.target.value)} 
+            onChange={(e) => handleDestinataireChange(e.target.value)}
             className="p-3 border rounded"
             required
           >
@@ -394,20 +474,26 @@ const FitCreateOrder = () => {
             onChange={(e) => setDeliveryDate(e.target.value)} 
             className="p-3 border rounded" 
             required
+            placeholder="Date de livraison"
           />
           <input 
             type="date" 
             value={serviceDate} 
             disabled 
             className="p-3 border rounded bg-gray-100" 
-            title="Date de service calculée automatiquement (+6 mois)"
+            title={selectedDestinataire?.role?.toLowerCase() === 'carrossier' ? 
+              "Date de contrôle périodique (à effectuer par un revendeur dans 6 mois)" : 
+              "Date de contrôle périodique (à effectuer par le revendeur)"
+            }
+            placeholder="Date contrôle périodique (+6 mois)"
           />
         </div>
        
         <div>
-          <h2 className="font-bold text-lg mb-2">PRODUITS</h2>
+          <h2 className="font-bold text-lg mb-4">PRODUITS</h2>
+          
           {selectedProducts.map((product, index) => (
-            <div key={index} className="border p-4 rounded mb-4 space-y-2 relative">
+            <div key={index} className="border p-4 rounded mb-4 space-y-4 relative bg-gray-50">
               <button
                 type="button"
                 onClick={() => removeProduct(index)}
@@ -449,33 +535,67 @@ const FitCreateOrder = () => {
                 accept="application/pdf" 
                 onChange={(e) => updateProduct(index, "file", e)} 
                 className="p-2 border rounded w-full" 
-                title="Fichier PDF optionnel"
+                title="Fichier PDF optionnel (instruction/référence)"
               />
               
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {Object.entries(product.documentsChoisis).map(([key, val]) => (
-                  <label key={key} className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      checked={val} 
-                      onChange={(e) => updateProduct(index, `documentsChoisis.${key}`, e.target.checked)} 
-                    />
-                    <span className="text-sm">
-                      {key.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase())}
-                    </span>
-                  </label>
-                ))}
-              </div>
+              {/* Documents dynamiques selon le destinataire */}
+              {selectedDestinataire && (
+                <div className="bg-white p-3 rounded border">
+                  <h4 className="font-semibold text-sm mb-3 text-gray-800 border-b pb-2">
+                    📄 Documents à envoyer pour {selectedDestinataire.role}:
+                  </h4>
+                  <div className="space-y-2">
+                    {getDocumentsForDestinataire(selectedDestinataire.role).map((doc) => (
+                      <div key={doc.key} className="flex items-start gap-3 p-2 bg-gray-50 rounded">
+                        <input 
+                          type="checkbox" 
+                          checked={product.documentsChoisis[doc.key] || false} 
+                          onChange={(e) => updateProduct(index, `documentsChoisis.${doc.key}`, e.target.checked)} 
+                          disabled={doc.required}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <span className={`text-sm font-medium ${doc.required ? 'text-blue-600' : 'text-gray-700'}`}>
+                            {doc.icon} {doc.label} {doc.required ? '(requis)' : ''}
+                          </span>
+                          {doc.description && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {doc.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {!selectedDestinataire && (
+                <div className="text-sm text-gray-500 italic bg-yellow-50 p-3 rounded border border-yellow-200">
+                  ⚠️ Sélectionnez d'abord un destinataire pour voir les documents disponibles
+                </div>
+              )}
             </div>
           ))}
           
           <button 
             type="button" 
             onClick={addProduct} 
-            className="text-blue-600 hover:text-blue-800 font-bold mt-2 border border-blue-600 px-4 py-2 rounded hover:bg-blue-50"
+            className={`font-bold mt-4 px-6 py-3 rounded transition-all ${
+              selectedDestinataire 
+                ? "text-blue-600 hover:text-blue-800 border border-blue-600 hover:bg-blue-50" 
+                : "text-gray-400 border border-gray-300 cursor-not-allowed"
+            }`}
+            disabled={!selectedDestinataire}
           >
             + Ajouter un produit
           </button>
+          
+          {!selectedDestinataire && (
+            <p className="text-sm text-gray-500 mt-2">
+              Veuillez d'abord sélectionner un destinataire pour ajouter des produits
+            </p>
+          )}
         </div>
 
         <button
