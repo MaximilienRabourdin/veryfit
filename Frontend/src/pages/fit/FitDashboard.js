@@ -18,6 +18,9 @@ import {
   FaClipboardCheck,
   FaFileSignature,
   FaTimes,
+  FaClock,
+  FaCalendarCheck,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 
 const FitDashboard = () => {
@@ -74,6 +77,102 @@ const FitDashboard = () => {
     };
   }, [user]);
 
+  // 🔹 NOUVEAU : Fonction pour formater les dates de manière robuste
+  const formatDate = (dateInput) => {
+    if (!dateInput) return 'N/A';
+    
+    let dateObj;
+    if (dateInput.toDate && typeof dateInput.toDate === 'function') {
+      dateObj = dateInput.toDate();
+    } else if (dateInput.seconds) {
+      dateObj = new Date(dateInput.seconds * 1000);
+    } else if (dateInput instanceof Date) {
+      dateObj = dateInput;
+    } else {
+      dateObj = new Date(dateInput);
+    }
+    
+    if (isNaN(dateObj.getTime())) return 'N/A';
+    
+    return dateObj.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // 🔹 NOUVEAU : Calculer les jours restants
+  const getDaysRemaining = (dateInput) => {
+    if (!dateInput) return null;
+    
+    let dateObj;
+    if (dateInput.toDate && typeof dateInput.toDate === 'function') {
+      dateObj = dateInput.toDate();
+    } else if (dateInput.seconds) {
+      dateObj = new Date(dateInput.seconds * 1000);
+    } else if (dateInput instanceof Date) {
+      dateObj = dateInput;
+    } else {
+      dateObj = new Date(dateInput);
+    }
+    
+    if (isNaN(dateObj.getTime())) return null;
+    
+    const now = new Date();
+    const diffTime = dateObj - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
+  // 🔹 NOUVEAU : Obtenir le statut du contrôle périodique
+  const getControleStatus = (order) => {
+    if (!order.controlePeriodiqueDate) return 'no_date';
+    
+    const daysRemaining = getDaysRemaining(order.controlePeriodiqueDate);
+    
+    if (daysRemaining === null) return 'no_date';
+    if (daysRemaining < 0) return 'overdue'; // En retard
+    if (daysRemaining === 0) return 'today'; // Aujourd'hui
+    if (daysRemaining <= 7) return 'urgent'; // Dans la semaine
+    if (daysRemaining <= 30) return 'soon'; // Dans le mois
+    return 'pending'; // Plus tard
+  };
+
+  // 🔹 NOUVEAU : Trier les contrôles par priorité
+  const getControlesByPriority = () => {
+    return orders
+      .filter(order => order.controlePeriodiqueDate)
+      .map(order => ({
+        ...order,
+        daysRemaining: getDaysRemaining(order.controlePeriodiqueDate),
+        status: getControleStatus(order),
+        formattedDate: formatDate(order.controlePeriodiqueDate)
+      }))
+      .sort((a, b) => {
+        // Trier par priorité : overdue > today > urgent > soon > pending
+        const priority = { overdue: 0, today: 1, urgent: 2, soon: 3, pending: 4 };
+        if (priority[a.status] !== priority[b.status]) {
+          return priority[a.status] - priority[b.status];
+        }
+        // Si même priorité, trier par date
+        return (a.daysRemaining || 0) - (b.daysRemaining || 0);
+      });
+  };
+
+  // 🔹 NOUVEAU : Statistiques des contrôles périodiques
+  const getControleStats = () => {
+    const controles = getControlesByPriority();
+    return {
+      total: controles.length,
+      overdue: controles.filter(c => c.status === 'overdue').length,
+      today: controles.filter(c => c.status === 'today').length,
+      urgent: controles.filter(c => c.status === 'urgent').length,
+      soon: controles.filter(c => c.status === 'soon').length,
+      pending: controles.filter(c => c.status === 'pending').length
+    };
+  };
+
   // 3. Si pas encore d'utilisateur, ne pas exécuter la suite
   if (!user) return <div className="p-6">Chargement de l'utilisateur...</div>;
 
@@ -128,6 +227,9 @@ const FitDashboard = () => {
     );
   });
 
+  const controleStats = getControleStats();
+  const prochains = getControlesByPriority().slice(0, 10);
+
   return (
     <div className="p-6 bg-lightGray min-h-screen flex flex-col relative font-sans">
       <header className="flex items-center justify-between mb-4">
@@ -173,7 +275,8 @@ const FitDashboard = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {/* 🔹 NOUVEAU : Section des statistiques avec contrôles périodiques */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded shadow-md">
           <FaClipboardCheck className="text-green-600 text-3xl mb-2" />
           <p className="font-semibold">Documents complétés</p>
@@ -181,6 +284,7 @@ const FitDashboard = () => {
             {orders.reduce((acc, o) => acc + countDocumentsCompletes(o), 0)}
           </p>
         </div>
+        
         <div className="bg-white p-4 rounded shadow-md">
           <FaFileSignature className="text-yellow-500 text-3xl mb-2" />
           <p className="font-semibold">Documents en attente</p>
@@ -189,6 +293,30 @@ const FitDashboard = () => {
               (acc, o) => acc + (countDocumentsTotal(o) - countDocumentsCompletes(o)),
               0
             )}
+          </p>
+        </div>
+
+        {/* 🔹 NOUVEAU : Statistique contrôles en retard */}
+        <div className="bg-white p-4 rounded shadow-md">
+          <FaExclamationTriangle className="text-red-500 text-3xl mb-2" />
+          <p className="font-semibold">Contrôles en retard</p>
+          <p className="text-2xl text-red-500 font-bold">
+            {controleStats.overdue + controleStats.today}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {controleStats.overdue} en retard, {controleStats.today} aujourd'hui
+          </p>
+        </div>
+
+        {/* 🔹 NOUVEAU : Statistique contrôles à venir */}
+        <div className="bg-white p-4 rounded shadow-md">
+          <FaClock className="text-blue-500 text-3xl mb-2" />
+          <p className="font-semibold">Contrôles à venir</p>
+          <p className="text-2xl text-blue-500 font-bold">
+            {controleStats.urgent + controleStats.soon}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {controleStats.urgent} cette semaine, {controleStats.soon} ce mois
           </p>
         </div>
       </div>
@@ -262,29 +390,128 @@ const FitDashboard = () => {
           </div>
         </div>
 
+        {/* 🔹 MODIFIÉ : Section calendrier améliorée */}
         <div className="bg-white shadow-md p-4 rounded">
-          <h2 className="text-lg font-bold mb-4">Calendrier</h2>
-          <Calendar onChange={setDate} value={date} />
-          <div className="mt-4">
-            <h3 className="font-bold text-sm text-gray-600 mb-2">📆 Rappels à venir</h3>
-            <ul className="text-sm space-y-1">
-              {orders
-                .filter(order => order.controlePeriodiqueDate)
-                .filter(order => {
-                  const target = new Date(order.controlePeriodiqueDate.seconds * 1000);
-                  return target >= new Date();
-                })
-                .sort((a, b) => a.controlePeriodiqueDate.seconds - b.controlePeriodiqueDate.seconds)
-                .slice(0, 5)
-                .map(order => {
-                  const date = new Date(order.controlePeriodiqueDate.seconds * 1000).toLocaleDateString();
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <FaCalendarCheck className="text-blue-600" />
+            Contrôles Périodiques
+          </h2>
+          
+          <Calendar onChange={setDate} value={date} className="mb-4" />
+          
+          {/* 🔹 NOUVEAU : Résumé des contrôles par priorité */}
+          <div className="mb-4 p-3 bg-gray-50 rounded">
+            <h4 className="font-semibold text-sm mb-2">📊 Résumé</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex justify-between">
+                <span>🔴 En retard:</span>
+                <span className="font-bold text-red-600">{controleStats.overdue}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>🟡 Aujourd'hui:</span>
+                <span className="font-bold text-yellow-600">{controleStats.today}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>🟠 Cette semaine:</span>
+                <span className="font-bold text-orange-600">{controleStats.urgent}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>🔵 Ce mois:</span>
+                <span className="font-bold text-blue-600">{controleStats.soon}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 🔹 NOUVEAU : Liste détaillée des prochains contrôles */}
+          <div>
+            <h3 className="font-bold text-sm text-gray-600 mb-3">🗓️ Prochains contrôles</h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {prochains.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">Aucun contrôle périodique programmé</p>
+              ) : (
+                prochains.map(order => {
+                  const getStatusInfo = (status, days) => {
+                    switch (status) {
+                      case 'overdue':
+                        return {
+                          icon: '🔴',
+                          text: `En retard de ${Math.abs(days)} jour${Math.abs(days) > 1 ? 's' : ''}`,
+                          bgColor: 'bg-red-50',
+                          borderColor: 'border-red-200',
+                          textColor: 'text-red-700'
+                        };
+                      case 'today':
+                        return {
+                          icon: '🟡',
+                          text: 'Aujourd\'hui',
+                          bgColor: 'bg-yellow-50',
+                          borderColor: 'border-yellow-200',
+                          textColor: 'text-yellow-700'
+                        };
+                      case 'urgent':
+                        return {
+                          icon: '🟠',
+                          text: `Dans ${days} jour${days > 1 ? 's' : ''}`,
+                          bgColor: 'bg-orange-50',
+                          borderColor: 'border-orange-200',
+                          textColor: 'text-orange-700'
+                        };
+                      case 'soon':
+                        return {
+                          icon: '🔵',
+                          text: `Dans ${days} jour${days > 1 ? 's' : ''}`,
+                          bgColor: 'bg-blue-50',
+                          borderColor: 'border-blue-200',
+                          textColor: 'text-blue-700'
+                        };
+                      default:
+                        return {
+                          icon: '⚪',
+                          text: `Dans ${days} jour${days > 1 ? 's' : ''}`,
+                          bgColor: 'bg-gray-50',
+                          borderColor: 'border-gray-200',
+                          textColor: 'text-gray-700'
+                        };
+                    }
+                  };
+
+                  const statusInfo = getStatusInfo(order.status, order.daysRemaining);
+
                   return (
-                    <li key={order.id}>
-                      📄 {order.orderName} – <span className="text-gray-500">{date}</span>
-                    </li>
+                    <div
+                      key={order.id}
+                      className={`p-3 border rounded-md cursor-pointer hover:shadow-sm transition-shadow ${statusInfo.bgColor} ${statusInfo.borderColor}`}
+                      onClick={() => navigate(`/fit/orders/${order.id}`)}
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="font-medium text-sm truncate pr-2">
+                          {statusInfo.icon} {order.orderName}
+                        </span>
+                      </div>
+                      
+                      <div className="text-xs text-gray-600 mb-1">
+                        📧 {order.revendeurEmail || 'Email non défini'}
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">
+                          📅 {order.formattedDate}
+                        </span>
+                        <span className={`text-xs font-medium ${statusInfo.textColor}`}>
+                          {statusInfo.text}
+                        </span>
+                      </div>
+                      
+                      {order.produits && order.produits.length > 0 && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          🔧 {order.produits.length} produit{order.produits.length > 1 ? 's' : ''}
+                        </div>
+                      )}
+                    </div>
                   );
-                })}
-            </ul>
+                })
+              )}
+            </div>
           </div>
         </div>
       </div>
