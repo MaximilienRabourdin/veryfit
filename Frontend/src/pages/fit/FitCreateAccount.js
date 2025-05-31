@@ -45,7 +45,12 @@ const FitCreateAccount = () => {
 
   const setCustomClaims = async (uid, role) => {
     try {
-      const response = await fetch("https://veryfit.onrender.com/api/custom-claims/setCustomClaims", {
+      // 🔹 MODIFIÉ : URL mise à jour selon votre backend
+      const API_URL = process.env.NODE_ENV === 'production' 
+        ? "https://veryfit-production.up.railway.app" 
+        : "http://localhost:5000";
+        
+      const response = await fetch(`${API_URL}/api/custom-claims/setCustomClaims`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uid, role: role.toLowerCase(), isApproved: true }),
@@ -88,76 +93,95 @@ const FitCreateAccount = () => {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       console.log("✅ Utilisateur créé :", user.uid);
 
-      // Préparer les données selon le rôle
+      // 🔹 MODIFIÉ : Données de base avec indicateur FIT
       const baseUserData = {
         email,
         role: role.toLowerCase(),
-        isApproved: true,
+        isApproved: true, // ✅ Approuvé automatiquement par FIT
         createdAt: new Date(),
-        createdBy: auth.currentUser?.email || 'fit@fitdoors.com'
+        createdBy: "FIT", // 🔹 IMPORTANT : Marquer comme créé par FIT
+        approvedAt: new Date(), // 🔹 AJOUTÉ : Date d'approbation
+        approvedBy: auth.currentUser?.email || 'fit@fitdoors.com' // 🔹 AJOUTÉ : Qui a approuvé
       };
 
       let userData;
 
       if (role.toLowerCase() === 'client') {
-        // Données spécifiques aux clients
+        // 🔹 MODIFIÉ : Données spécifiques aux clients avec structure cohérente
         userData = {
           ...baseUserData,
+          nom: Contact || `${Prenom} ${Nom}`.trim(), // Nom de contact pour compatibilité
+          company: nomEntreprise || email.split('@')[0], // Nom d'entreprise pour compatibilité
           nomEntreprise: nomEntreprise || email.split('@')[0],
-          contact: `${Prenom} ${Nom}`.trim() || Contact,
-          adresse: `${adresse}, ${CodePostal} ${ville}`.trim(),
-          ville,
-          codePostal: CodePostal,
-          telephone: Telephone,
-          secteurActivite,
-          commentaires,
+          contact: Contact || `${Prenom} ${Nom}`.trim(),
+          adresse: adresse ? `${adresse}, ${CodePostal} ${ville}`.trim() : '',
+          ville: ville || '',
+          codePostal: CodePostal || '',
+          telephone: Telephone || '',
+          secteurActivite: secteurActivite || '',
+          commentaires: commentaires || '',
           preferences: {
             notifications: true,
             rappelsEmail: true,
             langue: 'fr'
-          }
+          },
+          // 🔹 AJOUTÉ : Champs pour compatibilité avec les autres composants
+          Nom: nomEntreprise, // Pour certains composants qui utilisent ce champ
+          Contact: Contact,
+          Telephone: Telephone
         };
       } else {
         // Données pour revendeurs et carrossiers (format existant)
         userData = {
           ...baseUserData,
-          Nom: Nom || nomEntreprise, // Utiliser nomEntreprise si Nom est vide
-          Prenom,
-          Numero,
-          NumeroAdherent,
-          CodePostal,
-          CodeVendeur,
+          Nom: Nom || nomEntreprise,
+          Prenom: Prenom || '',
+          Numero: Numero || '',
+          NumeroAdherent: NumeroAdherent || '',
+          CodePostal: CodePostal || '',
+          CodeVendeur: CodeVendeur || '',
           Contact: Contact || `${Prenom} ${Nom}`.trim(),
-          Pays,
-          CodePaysRegion,
-          Telephone,
+          Pays: Pays || 'France',
+          CodePaysRegion: CodePaysRegion || '',
+          Telephone: Telephone || '',
           // Champs additionnels pour compatibilité
           company: nomEntreprise || `${Prenom} ${Nom}`.trim(),
-          adresse
+          nom: `${Prenom} ${Nom}`.trim(), // Pour compatibilité
+          adresse: adresse || ''
         };
       }
 
+      console.log("📝 Données utilisateur à sauvegarder:", userData);
+
       await setDoc(doc(db, "users_webapp", user.uid), userData);
+      console.log("✅ Données sauvegardées dans Firestore");
 
       await setCustomClaims(user.uid, role.toLowerCase());
 
       // Créer une notification
       await addDoc(collection(db, 'notifications'), {
         type: `nouveau_${role.toLowerCase()}`,
-        message: `🆕 Nouveau ${getRoleDisplayName(role)} créé : ${nomEntreprise || `${Prenom} ${Nom}` || email} (${email})`,
+        message: `🆕 Nouveau ${getRoleDisplayName(role)} créé : ${nomEntreprise || Contact || `${Prenom} ${Nom}` || email} (${email})`,
         createdAt: new Date(),
         createdBy: auth.currentUser?.email || 'fit@fitdoors.com',
         userId: user.uid,
         read: false
       });
 
-      // ✅ Patch : force la reconnexion pour recharger les claims
-      await signOut(auth);
-      await new Promise((res) => setTimeout(res, 500));
-      const reauth = await signInWithEmailAndPassword(auth, email, password);
-      console.log("🔁 Reconnecté pour recharger la session :", reauth.user.uid);
+      // 🔹 MODIFIÉ : Message de succès plus informatif
+      const successMsg = `✅ Compte ${getRoleDisplayName(role)} créé avec succès !
 
-      setMessage(`✅ Compte ${getRoleDisplayName(role)} créé avec succès !\n\nEmail : ${email}\nMot de passe : ${password}\n\nL'utilisateur peut maintenant se connecter.`);
+📧 Email : ${email}
+🔑 Mot de passe : ${password}
+🏢 ${role.toLowerCase() === 'client' ? 'Entreprise' : 'Société'} : ${nomEntreprise || Contact || `${Prenom} ${Nom}`}
+
+✅ Le compte est automatiquement approuvé
+✅ L'utilisateur peut se connecter immédiatement
+✅ Redirection automatique vers son tableau de bord
+
+📧 Un email de bienvenue sera envoyé avec les informations de connexion.`;
+
+      setMessage(successMsg);
       
       // Reset du formulaire
       setFormData({
@@ -167,9 +191,22 @@ const FitCreateAccount = () => {
         nomEntreprise: "", adresse: "", ville: "", secteurActivite: "", commentaires: ""
       });
 
+      console.log("🎉 Compte créé avec succès pour:", email, "avec le rôle:", role);
+
     } catch (err) {
-      console.error("❌ Erreur :", err.message);
-      setError(err.message);
+      console.error("❌ Erreur création compte:", err.message);
+      
+      // 🔹 MODIFIÉ : Messages d'erreur plus explicites
+      let errorMessage = err.message;
+      if (err.code === 'auth/email-already-in-use') {
+        errorMessage = "Cette adresse email est déjà utilisée";
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = "Adresse email invalide";
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = "Le mot de passe doit contenir au moins 6 caractères";
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -186,7 +223,7 @@ const FitCreateAccount = () => {
       <form onSubmit={handleSignup} className="bg-white p-6 rounded shadow-md w-full max-w-4xl space-y-6">
         {/* Section identifiants */}
         <div className="border-b border-gray-200 pb-4">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Identifiants du compte</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">🔐 Identifiants du compte</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input 
               name="email" 
@@ -215,9 +252,9 @@ const FitCreateAccount = () => {
               required
             >
               <option value="">Choisir un rôle*</option>
-              <option value="Revendeur">Revendeur</option>
-              <option value="Carrossier">Carrossier</option>
-              <option value="Client">Client (Utilisateur final)</option>
+              <option value="Revendeur">🏪 Revendeur</option>
+              <option value="Carrossier">🔧 Carrossier</option>
+              <option value="Client">👤 Client (Utilisateur final)</option>
             </select>
           </div>
         </div>
@@ -381,37 +418,91 @@ const FitCreateAccount = () => {
           className="w-full bg-blue-600 text-white py-3 rounded-lg mt-6 hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed" 
           disabled={loading}
         >
-          {loading ? "Création en cours..." : `Créer le compte ${getRoleDisplayName(formData.role)}`}
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white inline-block mr-2"></div>
+              Création en cours...
+            </>
+          ) : (
+            `✅ Créer le compte ${getRoleDisplayName(formData.role)}`
+          )}
         </button>
 
+        {/* 🔹 MODIFIÉ : Message de succès amélioré */}
         {message && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-green-800 whitespace-pre-line">{message}</p>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <span className="text-green-500 text-2xl">✅</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-green-800 mb-3">Compte créé avec succès !</h3>
+                <pre className="text-sm text-green-800 whitespace-pre-line font-mono bg-green-100 p-3 rounded">{message}</pre>
+              </div>
+            </div>
           </div>
         )}
+        
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800">{error}</p>
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <span className="text-red-500 text-xl">❌</span>
+              </div>
+              <div className="ml-3">
+                <p className="text-red-800 font-medium">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Aide contextuelle */}
+        {/* 🔹 MODIFIÉ : Aide contextuelle améliorée */}
         {formData.role && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-800 mb-2">
+            <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
               💡 À propos du rôle {getRoleDisplayName(formData.role)}
             </h4>
             <div className="text-sm text-blue-700">
               {isClientRole ? (
-                <p>Les clients peuvent consulter leurs équipements, accéder aux rapports de contrôle et recevoir des notifications de maintenance.</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Accès au tableau de bord client</li>
+                  <li>Consultation des équipements assignés</li>
+                  <li>Téléchargement des rapports de contrôle</li>
+                  <li>Notifications de maintenance automatiques</li>
+                  <li>Accès aux notices d'utilisation</li>
+                </ul>
               ) : formData.role.toLowerCase() === 'revendeur' ? (
-                <p>Les revendeurs effectuent les contrôles périodiques et peuvent gérer les rappels de maintenance.</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Effectue les contrôles périodiques (6 mois)</li>
+                  <li>Génère les certificats de contrôle</li>
+                  <li>Gère les rappels de maintenance</li>
+                  <li>Assigne les équipements aux clients</li>
+                </ul>
               ) : (
-                <p>Les carrossiers effectuent les contrôles de montage et mise en service des équipements.</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Effectue les contrôles de montage et mise en service</li>
+                  <li>Remplit les formulaires de conformité CE</li>
+                  <li>Génère les déclarations de montage</li>
+                  <li>Validation des installations</li>
+                </ul>
               )}
             </div>
           </div>
         )}
+
+        {/* 🔹 NOUVEAU : Information importante */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <span className="text-yellow-600 text-lg">⚡</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-800">
+                <strong>Comptes créés par FIT :</strong> Les comptes sont automatiquement approuvés et l'utilisateur peut se connecter immédiatement sans validation supplémentaire.
+              </p>
+            </div>
+          </div>
+        </div>
       </form>
     </div>
   );

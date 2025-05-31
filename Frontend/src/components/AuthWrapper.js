@@ -43,6 +43,7 @@ const AuthWrapper = ({ children }) => {
       // Récupération des claims et rôle
       let claims = null;
       let hasRole = false;
+      let userData = null; // 🔹 AJOUTÉ : Pour stocker les données Firestore
 
       // Tentatives d'obtention des custom claims Firebase
       for (let i = 0; i < 3; i++) {
@@ -66,13 +67,14 @@ const AuthWrapper = ({ children }) => {
           console.log("🔄 Fallback Firestore...");
           const userDoc = await getDoc(doc(db, "users_webapp", user.uid));
           if (userDoc.exists()) {
-            const userData = userDoc.data();
+            userData = userDoc.data(); // 🔹 MODIFIÉ : Stocker les données complètes
             claims = {
               role: userData.role,
               isApproved: userData.isApproved === true,
             };
             hasRole = !!userData.role;
             console.log("✅ Rôle Firestore:", userData.role);
+            console.log("✅ Données utilisateur:", userData); // 🔹 AJOUTÉ : Log des données
           }
         } catch (err) {
           console.error("❌ Erreur Firestore:", err);
@@ -90,38 +92,53 @@ const AuthWrapper = ({ children }) => {
         return;
       }
 
-      // Vérification approbation
-      if (claims.isApproved !== true) {
+      // 🔹 MODIFIÉ : Vérification approbation avec logique FIT
+      const isApprovedByFit = userData?.createdBy === "FIT";
+      const isDirectlyApproved = claims.isApproved === true;
+      const isUserApproved = isDirectlyApproved || isApprovedByFit;
+
+      console.log("🔍 Vérification approbation:", {
+        isDirectlyApproved,
+        isApprovedByFit,
+        isUserApproved,
+        createdBy: userData?.createdBy
+      });
+
+      if (!isUserApproved) {
         console.warn("⛔ Utilisateur non approuvé");
         if (!isInCreateAccountPage) {
-          navigate("/", { replace: true });
+          navigate("/unauthorized", { replace: true });
         }
         setLoading(false);
         setAuthChecked(true);
         return;
       }
 
-      // Mapping des rôles - Support des deux formats (majuscule/minuscule)
+      // 🔹 MODIFIÉ : Mapping des rôles avec support du rôle "client"
       const roleToBasePath = {
         "Super Admin": "/fit",
         "super admin": "/fit",
         "Revendeur": "/revendeur",
-        "revendeur": "/revendeur", // ✅ Support minuscules aussi
+        "revendeur": "/revendeur",
         "Carrossier": "/carrossier",
-        "carrossier": "/carrossier", // ✅ Support minuscules aussi
+        "carrossier": "/carrossier",
         "Utilisateur": "/client",
-        "utilisateur": "/client", // ✅ Support minuscules aussi
+        "utilisateur": "/client",
+        "Client": "/client", // 🔹 AJOUTÉ : Support du rôle "client"
+        "client": "/client", // 🔹 AJOUTÉ : Support du rôle "client" minuscule
       };
 
       const roleToDefaultDashboard = {
         "Super Admin": "/fit/dashboard",
         "super admin": "/fit/dashboard",
         "Revendeur": "/revendeur/dashboard",
-        "revendeur": "/revendeur/dashboard", // ✅ Support minuscules aussi
+        "revendeur": "/revendeur/dashboard",
         "Carrossier": "/carrossier/dashboard",
-        "carrossier": "/carrossier/dashboard", // ✅ Support minuscules aussi
+        "carrossier": "/carrossier/dashboard",
         "Utilisateur": "/client/dashboard",
-        "utilisateur": "/client/dashboard", // ✅ Support minuscules aussi
+        "utilisateur": "/client/dashboard",
+        "Client": "/client/dashboard", // 🔹 AJOUTÉ : Support du rôle "client"
+        "client": "/client/dashboard", // 🔹 AJOUTÉ : Support du rôle "client" minuscule
       };
 
       const userBasePath = roleToBasePath[claims.role];
@@ -133,6 +150,7 @@ const AuthWrapper = ({ children }) => {
       console.log("📍 currentPath:", currentPath);
       console.log("🎯 userBasePath:", userBasePath);
       console.log("✅ isOnAuthorizedPath:", isOnAuthorizedPath);
+      console.log("👤 Rôle utilisateur:", claims.role);
 
       // Logique de redirection
       if (!userBasePath) {
